@@ -1,33 +1,9 @@
 import os
 import numpy as np
-import struct
+from fvec import read_fvecs, to_fvecs
 
 source = './'
 datasets = ['gist']
-
-def read_fvecs(filename, c_contiguous=True):
-    fv = np.fromfile(filename, dtype=np.float32)
-    if fv.size == 0:
-        return np.zeros((0, 0))
-    dim = fv.view(np.int32)[0]
-    assert dim > 0
-    fv = fv.reshape(-1, 1 + dim)
-    if not all(fv.view(np.int32)[:, 0] == dim):
-        raise IOError("Non-uniform vector sizes in " + filename)
-    fv = fv[:, 1:]
-    if c_contiguous:
-        fv = fv.copy()
-    return fv
-
-def to_fvecs(filename, data):
-    print(f"Writing File - {filename}")
-    with open(filename, 'wb') as fp:
-        for y in data:
-            d = struct.pack('I', len(y))
-            fp.write(d)
-            for x in y:
-                a = struct.pack('f', x)
-                fp.write(a)
 
 def Orthogonal(D):
     G = np.random.randn(D, D).astype('float32')
@@ -37,9 +13,10 @@ def Orthogonal(D):
 if __name__ == "__main__":
     
     for dataset in datasets:
+        # seed for reproducibility
         np.random.seed(0)
-        
-        # path
+
+        # path for data
         path = os.path.join(source, dataset)
         data_path = os.path.join(path, f'{dataset}_base.fvecs')
 

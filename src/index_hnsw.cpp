@@ -62,15 +62,18 @@ int main(int argc, char * argv[]) {
         }
     }
     
+    //Matrix contains all the vectors for the specified data path
     Matrix<float> *X = new Matrix<float>(data_path);
     size_t D = X->d;
     size_t N = X->n;
     size_t report = 50000;
 
+    //Here we construct the index and save it to index_path
     L2Space l2space(D);
     HierarchicalNSW<float>* appr_alg = new HierarchicalNSW<float> (&l2space, N, M, efConstruction);
 
     for(int i=0;i<N;i++){
+        //Add point by passing in its pointer address and its index
         appr_alg->addPoint(X->data + i * D, i);
         if(i % report == 0){
             cerr << "Processing - " << i << " / " << N << endl;

@@ -3,7 +3,7 @@
 #include <queue>
 #include <unordered_set>
 
-#ifndef WIN32
+#ifndef _WIN32
 #include<sys/resource.h>
 #endif
 
@@ -28,7 +28,7 @@ public:
 
 };
 
-#ifndef WIN32
+#ifndef _WIN32
 void GetCurTime( rusage* curTime)
 {
 	int ret = getrusage( RUSAGE_SELF, curTime);

@@ -12,6 +12,8 @@ using namespace std;
 
 int main(int argc, char * argv[]) {
 
+    std::cout << "test";
+    //immutable array of type 'struct option' called longopts
     const struct option longopts[] ={
         // General Parameter
         {"help",                        no_argument,       0, 'h'}, 

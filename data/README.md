@@ -1,30 +1,43 @@
-
 # Prerequisites
-*   Python == 3.8, numpy == 1.20.3, faiss
+
+- Python == 3.8, numpy == 1.20.3, faiss
 
 # Datasets
 
-The tested datasets are available at https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html. 
+The tested datasets are available at https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html.
 
 1. Download the dataset GIST from ftp://ftp.irisa.fr/local/texmex/corpus/gist.tar.gz. The dataset is large. This step may take several minutes. The data format can be found in http://corpus-texmex.irisa.fr/.
-    ```shell
-    wget -O ./gist.tar.gz ftp://ftp.irisa.fr/local/texmex/corpus/gist.tar.gz --no-check-certificate
-    ```
 
-2. Unzip the dataset. 
+   ```shell
+   wget -O ./gist.tar.gz ftp://ftp.irisa.fr/local/texmex/corpus/gist.tar.gz --no-check-certificate
+   ```
 
-    ```shell
-    tar -zxvf ./gist.tar.gz -C ./
-    ```
+   ```windows powershell
+   curl -o ./gist.tar.gz ftp://ftp.irisa.fr/local/texmex/corpus/gist.tar.gz
+   ```
 
-3. Preprocess the dataset with random orthogonal transformation. 
+2. Unzip the dataset.
 
-    ```shell
-    python randomize.py
-    ```
+   ```shell
+   tar -zxvf ./gist.tar.gz -C ./
+   ```
 
-4. Generate the clustering of the dataset for IVF. 
+   ```windows powershell
+   tar -zxvf .\gist.tar.gz -C .\
+   ```
 
-    ```shell
-    python ivf.py
-    ```
+3. Optional: rename the gist data file (or other dataset) to dataset_raw,
+   and run fvec.py to reduce the number of dataset vectors 100x and number
+   of query vectors 10x
+
+4. Preprocess the dataset with random orthogonal transformation.
+
+   ```shell
+   python randomize.py
+   ```
+
+5. Generate the clustering of the dataset for IVF.
+
+   ```shell
+   python ivf.py
+   ```
