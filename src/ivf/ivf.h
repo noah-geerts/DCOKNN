@@ -194,9 +194,6 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, float distK) const
     size_t ncan = 0;
     for (int i = 0; i < nprobe; i++)
     {
-        cout << endl;
-        cout << centroid_dist[i].second << endl;
-        cout << C << endl;
         ncan += len[centroid_dist[i].second];
     }
     if (d == D)

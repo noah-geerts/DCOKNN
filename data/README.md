@@ -26,7 +26,7 @@ The tested datasets are available at https://www.cse.cuhk.edu.hk/systems/hash/gq
    tar -zxvf .\gist.tar.gz -C .\
    ```
 
-3. Optional: rename the gist data file (or other dataset) to dataset_raw,
+3. Optional: rename the gist data file (or other dataset) to [dataset name]\_raw,
    and run fvec.py to reduce the number of dataset vectors 100x and number
    of query vectors 10x
 

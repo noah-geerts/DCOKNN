@@ -26,14 +26,17 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
     using namespace std::chrono; // Import chrono functions for brevity
 
     float total_time = 0, search_time = 0;
-    std::vector<int> nprobes = {100};
+    std::vector<int> nprobes = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
 
     for (auto nprobe : nprobes)
     {
         total_time = 0;
         adsampling::clear();
         int correct = 0;
-
+        std::cerr << std::endl
+                  << std::endl
+                  << nprobe << std::endl
+                  << std::endl;
         for (int i = 0; i < Q.n; i++)
         {
             // Start timing
@@ -68,12 +71,10 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
         float recall = 1.0f * correct / (Q.n * k);
 
         // Print results
-        std::cout << std::endl
-                  << "Results in search_ivf's test method -- nprobe: "
-                  << nprobe << " Recall: " << recall * 100.00
-                  << " Time per query: " << time_us_per_query
-                  << " Total dimensions of adsampling object"
-                  << adsampling::tot_dimension << std::endl;
+        std::cout << nprobe
+                  << " " << recall * 100.00
+                  << " " << time_us_per_query
+                  << " " << adsampling::tot_dimension << std::endl;
     }
 }
 

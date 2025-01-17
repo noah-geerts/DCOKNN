@@ -1,0 +1,4 @@
+numpy
+faiss-cpu
+scikit-learn
+matplotlib

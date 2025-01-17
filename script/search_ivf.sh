@@ -3,7 +3,7 @@
 randomize=0
 
 cd ..
-g++ -g3 ./src/search_ivf.cpp -O3 -o ./src/search_ivf -I ./src/
+g++ -g ./src/search_ivf.cpp -O3 -o ./src/search_ivf -I ./src/
 
 path=./data
 result_path=./results
@@ -32,6 +32,6 @@ gnd="${path}/${data}/${data}_groundtruth.ivecs"
 trans="${path}/${data}/O.fvecs"
 
 echo "./src/search_ivf -d ${randomize} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -k ${K}"
-#./src/search_ivf -d ${randomize} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -k ${K}
+./src/search_ivf -d ${randomize} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -k ${K}
 
 done
