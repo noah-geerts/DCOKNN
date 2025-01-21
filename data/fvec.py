@@ -4,7 +4,7 @@ import os
 from sklearn.neighbors import NearestNeighbors
 
 source = './'
-datasets = ['glove1.2m']
+dataset = 'glove1.2m'
 
 def read_fvecs(filename, c_contiguous=True):
     # read entire file as binary, reutrn empty array if no data
@@ -92,7 +92,7 @@ def reduce(dataset):
         X = read_fvecs(data_path)
         n = X.shape[0]
         
-        # randomly sample 1% of the original vectors
+        # randomly sample 1/100th or 1/10th of the original vectors for base and query vectors respectively
         X = X[np.random.choice(n, n//reduction_factor, replace=False)]
 
         # write the reduced vectors to a new file
@@ -118,18 +118,17 @@ def ground_truth(X, Y):
     return indices
     
 if __name__ == "__main__":
-    for dataset in datasets:
-        # Run this file first: grabs raw data that you downloaded as fvecs and renamed to (data name)_raw.fvecs,
-        # Then reduces the number of vectors in the dataset by 100x and 10x for base and query vectors respectively,
-        # Then computes the ground truth for the reduced query vectors so we now have a smaller dataset to work with
-        # This produces a dataset_base.fvecs, dataset_query.fvecs, and dataset_groundtruth.ivecs
+    # Run this file first: grabs raw data that you downloaded as fvecs and renamed to (data name)_raw.fvecs,
+    # Then reduces the number of vectors in the dataset by 100x and 10x for base and query vectors respectively,
+    # Then computes the ground truth for the reduced query vectors so we now have a smaller dataset to work with
+    # This produces a dataset_base.fvecs, dataset_query.fvecs, and dataset_groundtruth.ivecs
 
-        # From this smaller dataset, first run randomize.py that randomly orthogonally rotates the dataset
-        # This produces an Odataset_base.fvecs and O.fvecs, the first of which is the rotated dataset and the second
-        # Of which is the rotation matrix used to rotate queries later
+    # From this smaller dataset, first run randomize.py that randomly orthogonally rotates the dataset
+    # This produces an Odataset_base.fvecs and O.fvecs, the first of which is the rotated dataset and the second
+    # Of which is the rotation matrix used to rotate queries later
 
-        # Then run ivf.py, which produces the centroids of the dataset and the randomized centroids of the dataset.
-        # It needs to be run after because it uses the same O.fvecs and Odataset_base.fvecs files to build the randomized
-        # Centroids. This produces dataset_centroid_K.fvecs and Odataset_centroid_K.fvecs
-    
-        reduce(dataset)
+    # Then run ivf.py, which produces the centroids of the dataset and the randomized centroids of the dataset.
+    # It needs to be run after because it uses the same O.fvecs and Odataset_base.fvecs files to build the randomized
+    # Centroids. This produces dataset_centroid_K.fvecs and Odataset_centroid_K.fvecs
+
+    reduce(dataset)

@@ -54,7 +54,7 @@ namespace adsampling
         // If the algorithm starts a non-zero dimensionality (i.e., the case of IVF++), we conduct the hypothesis testing immediately.
         if (i && res >= dis * ratio(D, i))
         {
-#ifdef COUNT_DIMENSION
+#ifdef COUNT_DIMENSION // This gets defined in the search.cpp files
             tot_dimension += i;
 #endif
             return -res * D / i;
@@ -65,14 +65,16 @@ namespace adsampling
         while (i < D)
         {
             // It continues to sample additional delta_d dimensions.
-            int check = std::min(delta_d, D - i);
-            i += check;
+            int check = std::min(delta_d, D - i); // only sample D - i dimensions if there aren't enough left for delta_d
+            i += check;                           // add these dimensions to the total number of dimensions sampled, i
             for (int j = 1; j <= check; j++)
             {
                 float t = *d - *q;
-                d++;
-                q++;
-                res += t * t;
+                d++;          // iterate to the next float in the data array
+                q++;          // iterate to the next float in the query array
+                res += t * t; // add square distance to res
+                // (res is the sum of squared differences).
+                // so sqrt(res) is the partial euclidean distance
             }
             // Hypothesis tesing
             if (res >= dis * ratio(D, i))

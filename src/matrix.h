@@ -59,7 +59,7 @@ Matrix<T>::Matrix(char *data_file_path)
 
     // Print working directory for debugging
     char cwd[1024];
-    std::cout << std::endl
+    /*std::cout << std::endl
               << "Matrix constructor:" << std::endl;
     if (getcwd(cwd, sizeof(cwd)) != NULL)
     {
@@ -68,14 +68,15 @@ Matrix<T>::Matrix(char *data_file_path)
     else
     {
         perror("getcwd() error");
-    }
+    }*/
 
     std::filesystem::path file_path(data_file_path);
-    std::cout << "Data file path: " << file_path << std::endl;
+    // std::cout << "Data file path: " << file_path << std::endl;
 
     std::ifstream in(file_path, std::ios::binary);
     if (!in.is_open())
     {
+        std::cout << file_path << std::endl;
         std::cout << "open file error" << std::endl;
         exit(-1);
     }

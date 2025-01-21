@@ -4,14 +4,18 @@ import os
 from fvec import read_fvecs, to_fvecs
 
 source = './'
-datasets = ['glove1.2m']
-# the number of clusters
-K = 41
+dataset = 'glove1.2m'
+dataset_N = 10000
+
+#K is the number of clusters
+sqrt_N = int(np.sqrt(dataset_N))
+k_list = [sqrt_N / 10, sqrt_N / 5, sqrt_N / 2, sqrt_N, sqrt_N * 2, sqrt_N * 5, sqrt_N * 10]
+k_list = [int(k) for k in k_list]
 
 if __name__ == '__main__':
+    for K in k_list:
+        print(f"Clustering - {dataset} with {K} clusters")
 
-    for dataset in datasets:
-        print(f"Clustering - {dataset}")
         # path
         path = os.path.join(source, dataset)
         data_path = os.path.join(path, f'{dataset}_base.fvecs')

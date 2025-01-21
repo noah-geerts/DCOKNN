@@ -26,17 +26,22 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
     using namespace std::chrono; // Import chrono functions for brevity
 
     float total_time = 0, search_time = 0;
-    std::vector<int> nprobes = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
+    std::vector<int> nprobes = {8, 10, 13, 16, 19, 24, 29, 40, 50, 60};
+    // if (ivf.C > 100)
+    // {
+    //     nprobes = {10, 12, 14, 16, 18, 20};
+    // }
+    // if (ivf.C > 1000)
+    // {
+    //     nprobes = {20, 30, 40, 50, 60, 70, 80, 90, 100};
+    // }
 
     for (auto nprobe : nprobes)
     {
         total_time = 0;
         adsampling::clear();
         int correct = 0;
-        std::cerr << std::endl
-                  << std::endl
-                  << nprobe << std::endl
-                  << std::endl;
+        std::cerr << nprobe << ", ";
         for (int i = 0; i < Q.n; i++)
         {
             // Start timing
