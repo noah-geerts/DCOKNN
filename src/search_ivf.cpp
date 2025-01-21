@@ -71,9 +71,9 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
         float recall = 1.0f * correct / (Q.n * k);
 
         // Print results
-        std::cout << nprobe
-                  << " " << recall * 100.00
+        std::cout << recall * 100.00
                   << " " << time_us_per_query
+                  << " " << nprobe
                   << " " << adsampling::tot_dimension << std::endl;
     }
 }

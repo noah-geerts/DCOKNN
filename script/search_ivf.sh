@@ -5,9 +5,16 @@ randomize=0
 cd ..
 g++ -g ./src/search_ivf.cpp -O3 -o ./src/search_ivf -I ./src/
 
+data='glove1.2m'
+
 path=./data
-result_path=./results
-data='gist'
+result_path=./results/${data}
+
+# Make result directory if it doesn't exist
+if [ ! -d ${result_path} ]; then
+    mkdir -p ${result_path}
+fi
+
 C=41
 K=100
 
@@ -24,7 +31,7 @@ else
     echo "IVF"
 fi
 
-res="${result_path}/${data}_IVF${C}_${randomize}.log"
+res="${result_path}/IVF_C${C}_${randomize}.log"
 index="${path}/${data}/${data}_ivf_${C}_${randomize}.index"
 
 query="${path}/${data}/${data}_query.fvecs"

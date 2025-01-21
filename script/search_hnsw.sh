@@ -1,13 +1,18 @@
-
-
+# 0 - HNSW, 1 - HNSW++, 2 - HNSW+
 cd ..
 
 g++ -g3 ./src/search_hnsw.cpp -O3 -o ./src/search_hnsw -I ./src/
 
-path=./data/
-result_path=./results/
+data='glove1.2m'
 
-data='gist'
+path=./data/
+result_path=./results/${data}
+
+# Make result directory if it doesn't exist
+if [ ! -d ${result_path} ]; then
+    mkdir -p ${result_path}
+fi
+
 ef=500
 M=16
 
@@ -27,7 +32,7 @@ else
     index="${path}/${data}/${data}_ef${ef}_M${M}.index"    
 fi
 
-res="${result_path}/${data}_ef${ef}_M${M}_${algoIndex}.log"
+res="${result_path}/HNSW_ef${ef}_M${M}_${algoIndex}.log"
 query="${path}/${data}/${data}_query.fvecs"
 gnd="${path}/${data}/${data}_groundtruth.ivecs"
 trans="${path}/${data}/O.fvecs"

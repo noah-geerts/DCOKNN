@@ -4,7 +4,7 @@ import os
 from sklearn.neighbors import NearestNeighbors
 
 source = './'
-datasets = ['gist']
+datasets = ['glove1.2m']
 
 def read_fvecs(filename, c_contiguous=True):
     # read entire file as binary, reutrn empty array if no data

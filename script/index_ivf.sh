@@ -3,7 +3,7 @@ cd ..
 g++ -g3 -o ./src/index_ivf ./src/index_ivf.cpp -I ./src/ -I ./src/Eigen/ -O3
 
 C=41 # Number of centroids... must match k in ivf.py script
-data='gist'
+data='glove1.2m'
 
 for adaptive in {0..2}
 do

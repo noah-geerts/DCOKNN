@@ -5,7 +5,7 @@ g++ -g3 -o ./src/index_hnsw ./src/index_hnsw.cpp -I ./src/ -O3
 
 efConstruction=500
 M=16
-data='gist'
+data='glove1.2m'
 
 
 echo "Indexing - ${data}"

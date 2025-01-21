@@ -3,3 +3,6 @@
 *.tar.gz
 /results/*.log
 /data/**/
+/results/**/
+/src/*
+!/src/*.*

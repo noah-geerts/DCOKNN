@@ -89,7 +89,10 @@ static void test_approx(float *massQ, size_t vecsize, size_t qsize, Hierarchical
     long double time_us_per_query = total_time / qsize + rotation_time;
     long double recall = 1.0f * correct / total;
 
-    cout << appr_alg.ef_ << " " << recall * 100.0 << " " << time_us_per_query << " " << adsampling::tot_dimension + adsampling::tot_full_dist * vecdim << endl;
+    cout << recall * 100.0
+         << " " << time_us_per_query
+         << " " << appr_alg.ef_
+         << " " << adsampling::tot_dimension + adsampling::tot_full_dist * vecdim << endl;
     return;
 }
 

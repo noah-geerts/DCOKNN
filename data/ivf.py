@@ -4,7 +4,7 @@ import os
 from fvec import read_fvecs, to_fvecs
 
 source = './'
-datasets = ['gist']
+datasets = ['glove1.2m']
 # the number of clusters
 K = 41
 
