@@ -216,7 +216,7 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, float distK) const
 #ifdef COUNT_DIST_TIME
             StopW stopw = StopW();
 #endif
-            float tmp_dist = sqr_dist(query, L1_data + can * d, d);
+            float tmp_dist = sqr_dist(query, L1_data + can * d, d); // temporary distance between query's first d dimensions and the data point's first d dimensions
 #ifdef COUNT_DIST_TIME
             adsampling::distance_time += stopw.getElapsedTimeMicro();
 #endif
@@ -255,10 +255,14 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, float distK) const
             for (int j = 0; j < len[cluster_id]; j++)
             {
                 size_t can = start[cluster_id] + j;
+                // can is the index of the start of the candidate vector in the flattened array of all data points
 #ifdef COUNT_DIST_TIME
                 StopW stopw = StopW();
 #endif
+                // distK is our threshold to be a candidate. It starts at +inf
                 float tmp_dist = adsampling::dist_comp(distK, res_data + can * (D - d), query + d, *cur_dist, d);
+                // tmp_dist is negative if the object is a negative object, otherwise it is the actual distance
+                // hence we do not need to check if tmp_dist < k before placing it on the heap
 #ifdef COUNT_DIST_TIME
                 adsampling::distance_time += stopw.getElapsedTimeMicro();
 #endif

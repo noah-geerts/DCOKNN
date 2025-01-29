@@ -91,6 +91,9 @@ namespace adsampling
         tot_dimension += D;
 #endif
         // We return the exact distance when we have sampled all the dimensions.
+        // The last iterration of the while loop will have i == D, so if we return
+        // res here, we are returning the full distance as a positive object,
+        // (it's distance is < k so we know it will go on the heap).
         return res;
     }
 
