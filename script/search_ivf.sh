@@ -29,43 +29,53 @@ fi
 if [ -f ${result_path}/IVF++.log ]; then
     rm ${result_path}/IVF++.log
 fi
+if [ -f ${result_path}/IVF_PCA.log ]; then
+    rm ${result_path}/IVF_PCA.log
+fi
 
 # Initialize run counter and total runs
 current_run=0
-total_runs=$(( ${#C_list[@]} * 3))\
+total_runs=$(( ${#C_list[@]} * 4))\
 
 # Iterate over the values of C and each algorithm
 for C in "${C_list[@]}"; do
-    for algoIndex in {0..2}; do
+    algoIndex=3
 
-        current_run=$((current_run + 1))
-        echo -e "\n"
+    current_run=$((current_run + 1))
+    echo -e "\n"
 
-        # Echo which algorithm is being run and set result file to that algorithm
-        if [ $algoIndex == "1" ]
-        then 
-            echo "IVF++"
-            res="${result_path}/IVF++.log"
-        elif [ $algoIndex == "2" ]
-        then 
-            echo "IVF+"
-            res="${result_path}/IVF+.log"
-        else
-            echo "IVF"
-            res="${result_path}/IVF.log"
-        fi
-
-        # Output which C value is being benchmarked
-        echo "Benchmarking with C: ${C} on ${data}"
-        echo -e "Run ${current_run}/${total_runs} \n"
-
-        # File paths for index, query vectors, groundtruth, and transformation matrix
-        index="${path}/${data}/${data}_ivf_${C}_${algoIndex}.index"
-        query="${path}/${data}/${data}_query.fvecs"
-        gnd="${path}/${data}/${data}_groundtruth.ivecs"
+    # Echo which algorithm is being run and set result file to that algorithm
+    if [ $algoIndex == "1" ]
+    then 
+        echo "IVF++"
+        res="${result_path}/IVF++.log"
         trans="${path}/${data}/O.fvecs"
+    elif [ $algoIndex == "2" ]
+    then 
+        echo "IVF+"
+        res="${result_path}/IVF+.log"
+        trans="${path}/${data}/O.fvecs"
+    elif [ $algoIndex == "3" ]
+    then 
+        echo "IVF_PCA"
+        res="${result_path}/IVF_PCA.log"
+        trans="${path}/${data}/PCA.fvecs"
+    else
+        echo "IVF"
+        res="${result_path}/IVF.log"
+        trans="${path}/${data}/O.fvecs"
+    fi
 
-        # Run program
-        ./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -k ${K}
-    done
+    # Output which C value is being benchmarked
+    echo "Benchmarking with C: ${C} on ${data}"
+    echo -e "Run ${current_run}/${total_runs} \n"
+
+    # File paths for index, query vectors, groundtruth, and transformation matrix
+    index="${path}/${data}/ivf_indexes/${data}_ivf_${C}_${algoIndex}.index"
+    query="${path}/${data}/${data}_query.fvecs"
+    gnd="${path}/${data}/${data}_groundtruth.ivecs"
+
+    # Run program
+    echo "./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -k ${K}"
+    ./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -k ${K}
 done

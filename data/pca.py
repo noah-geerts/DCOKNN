@@ -22,15 +22,18 @@ if __name__ == "__main__":
 
     # Compute and store transformed vectors with dimensions sorted by decreasing variance
     X_transformed = pca.fit_transform(X) #O(N*D^2)
-    transformed_path = os.path.join(path, f'{dataset}_transformed.fvecs')
+    print(X_transformed.shape)
+    transformed_path = os.path.join(path, f'PCA{dataset}_base.fvecs')
     to_fvecs(transformed_path, X_transformed)
 
     # Get and store projection matrix with dimensions sorted by decreasing variance
     pca_projection_matrix = pca.components_.T
-    projection_path = os.path.join(path, f'{dataset}_projection.fvecs')
+    print(pca_projection_matrix.shape)
+    projection_path = os.path.join(path, f'PCA.fvecs')
     to_fvecs(projection_path, pca_projection_matrix)
 
     # Compute the covariance matrix (D x D) and store it
     cov_matrix = pca.components_.T @ np.diag(pca.explained_variance_) @ pca.components_ #O(D^3)
-    cov_path = os.path.join(path, f'{dataset}_covariance.fvecs')
+    print(cov_matrix.shape)
+    cov_path = os.path.join(path, f'COV.fvecs')
     to_fvecs(cov_path, cov_matrix)

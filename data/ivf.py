@@ -4,7 +4,7 @@ import os
 from fvec import read_fvecs, to_fvecs
 
 source = './'
-dataset = "gist"
+dataset = 'gist'
 dataset_N = 10000
 
 #K is the number of clusters
@@ -16,16 +16,23 @@ if __name__ == '__main__':
     for K in k_list:
         print(f"Clustering - {dataset} with {K} clusters")
 
-        # path
+        # data paths
         path = os.path.join(source, dataset)
         data_path = os.path.join(path, f'{dataset}_base.fvecs')
+
+        # centroid paths
         centroids_path = os.path.join(path, f'{dataset}_centroid_{K}.fvecs')
-        randomized_cluster_path = os.path.join(path, f"O{dataset}_centroid_{K}.fvecs")
+        randomized_centroids_path = os.path.join(path, f"O{dataset}_centroid_{K}.fvecs")
+        pca_centroids_path = os.path.join(path, f"PCA{dataset}_centroid_{K}.fvecs")
+
+        # random transformation and projection paths
         transformation_path = os.path.join(path, 'O.fvecs')
+        projection_path = os.path.join(path, f'PCA.fvecs')
 
         # read data vectors
         X = read_fvecs(data_path)
-        P = read_fvecs(transformation_path)
+        O = read_fvecs(transformation_path)
+        PCA = read_fvecs(projection_path)
 
         D = X.shape[1]
         
@@ -37,5 +44,11 @@ if __name__ == '__main__':
         to_fvecs(centroids_path, centroids)
 
         # randomized centroids
-        centroids = np.dot(centroids, P)
-        to_fvecs(randomized_cluster_path, centroids)
+        centroids_randomized = np.dot(centroids, O)
+        print(centroids_randomized.shape)
+        to_fvecs(randomized_centroids_path, centroids_randomized)
+
+        # pca-space centroids
+        centroids_pca = np.dot(centroids, PCA)
+        print(centroids_pca.shape)
+        to_fvecs(pca_centroids_path, centroids_pca)
