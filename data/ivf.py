@@ -4,12 +4,12 @@ import os
 from fvec import read_fvecs, to_fvecs
 
 source = './'
-dataset = 'glove1.2m'
+dataset = "gist"
 dataset_N = 10000
 
 #K is the number of clusters
 sqrt_N = int(np.sqrt(dataset_N))
-k_list = [sqrt_N / 10, sqrt_N / 5, sqrt_N / 2, sqrt_N, sqrt_N * 2, sqrt_N * 5, sqrt_N * 10]
+k_list = [sqrt_N]
 k_list = [int(k) for k in k_list]
 
 if __name__ == '__main__':

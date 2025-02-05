@@ -3,7 +3,7 @@ import numpy as np
 from fvec import read_fvecs, to_fvecs
 
 source = './'
-dataset = 'glove1.2m'
+dataset = 'gist'
 
 def Orthogonal(D):
     G = np.random.randn(D, D).astype('float32')

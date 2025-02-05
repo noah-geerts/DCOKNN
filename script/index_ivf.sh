@@ -2,7 +2,7 @@
 cd ..
 g++ -g -o ./src/index_ivf ./src/index_ivf.cpp -I ./src/ -I ./src/Eigen/ -O3
 
-data='glove1.2m'
+data='gist'
 dataset_N=10000
 
 # Paths to data and index (example ../data/gist)

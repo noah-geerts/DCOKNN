@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt;
 import os
-data = "glove1.2m"
+data = "gist"
 source = "../results"
 output = "./plots"
 
