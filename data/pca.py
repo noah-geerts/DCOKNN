@@ -47,5 +47,11 @@ if __name__ == "__main__":
     # Calculate variance along each dimension
     variance_vector = np.var(X, axis=0, keepdims=True)  # Shape: (1, D)
     print("Variance shape:", variance_vector.shape)
-    variance_path = os.path.join(path, f'{dataset}_variance.fvecs')
+    variance_path = os.path.join(path, f'{dataset}_variances.fvecs')
     to_fvecs(variance_path, variance_vector)
+
+    # Calculate and store magnitude of each data vector
+    magnitudes = np.square(np.linalg.norm(X_transformed, axis=1, keepdims=True).T)  # Shape: (1, N)
+    print("Magnitudes shape:", magnitudes.shape)
+    magnitudes_path = os.path.join(path, f'{dataset}_magnitudes.fvecs')
+    to_fvecs(magnitudes_path, magnitudes)

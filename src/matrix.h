@@ -40,6 +40,7 @@ public:
 
     float dist(size_t a, const Matrix<T> &B, size_t b) const;
     void subtract_rowwise(const Matrix<T> &B);
+    void print_matrix() const;
 };
 
 template <typename T>
@@ -160,6 +161,25 @@ void Matrix<T>::subtract_rowwise(const Matrix<T> &B)
             this->data[i * this->d + j] -= B.data[j];
         }
     }
+}
+
+template <typename T>
+void Matrix<T>::print_matrix() const
+{
+    // Print shape
+    std::cout << "Matrix shape: (" << n << ", " << d << ")" << std::endl;
+
+    // Print contents
+    for (size_t i = 0; i < n; i++)
+    {
+        std::cout << "[ ";
+        for (size_t j = 0; j < d; j++)
+        {
+            std::cout << data[i * d + j] << " ";
+        }
+        std::cout << "]" << std::endl;
+    }
+    std::cout << std::endl;
 }
 
 #endif

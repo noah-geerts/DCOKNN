@@ -98,43 +98,45 @@ namespace adsampling
     }
 
     float dist_comp_pca(const float &dis, const void *data, const void *query, const float &sigma, const float &C1,
-                    float m = 3)
+                        float m = 3)
     {
         float *q = (float *)query;
-        float *d = (float *)data;
-        float res = 0; // current distance
+        float *d = (float *)data;   
 
         // Compute C2
         float C2 = 0;
-        for(int i = 0; i < delta_d; i++)
+        for (int i = 0; i < delta_d; i++)
         {
             float mult = *q * *d;
-            q++; d++;
+            q++;
+            d++;
             C2 += mult;
         }
         C2 *= 2;
 
         // Reject point if it is very far from threshold given data distribution
-        float partial_dis = C1 - C2 - m*sigma;
-        if (partial_dis >= dis) {
+        float partial_dis = C1 - C2;
+        if (partial_dis - m * sigma >= dis)
+        {
 #ifdef COUNT_DIMENSION
-                tot_dimension += delta_d;
+            tot_dimension += delta_d;
 #endif
             return -1 * partial_dis;
         }
 
         // Compute remaining term to return full distance
         float C3 = 0;
-        for(int i = 0; i < D - delta_d; i++)
+        for (int i = 0; i < D - delta_d; i++)
         {
             float mult = *q * *d;
-            q++; d++;
+            q++;
+            d++;
             C3 += mult;
         }
         C3 *= 2;
 
 #ifdef COUNT_DIMENSION
-                tot_dimension += D;
+        tot_dimension += D;
 #endif
         return C1 - C2 - C3;
     }

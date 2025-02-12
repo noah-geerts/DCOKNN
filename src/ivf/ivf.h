@@ -42,7 +42,7 @@ public:
     IVF(const Matrix<float> &X, const Matrix<float> &_centroids, const Matrix<float> &X_pca, const Matrix<float> &_centroids_pca);
     ~IVF();
 
-    ResultHeap search(float *query, size_t k, size_t nprobe, int algoIndex, float distK = std::numeric_limits<float>::max()) const;
+    ResultHeap search(float *query, size_t k, size_t nprobe, int algoIndex, Matrix<float> &magnitudes, float err_sd, float q_mag, float distK = std::numeric_limits<float>::max()) const;
     void save(char *filename);
     void load(char *filename);
 };
@@ -116,7 +116,7 @@ IVF::IVF(const Matrix<float> &X, const Matrix<float> &_centroids, const Matrix<f
     // Essentially we just flattened temp from an array of vectors to an array where we use start and len to access each centroid
 
     // Set the dimensionality
-    d = D; // IVF   - plain scan
+    d = 0;
 
     // Allocate memory for L1_data and res_data arrays
     L1_data = new float[N * d + 1];        // Flattened first d dimensions of each vector
@@ -255,7 +255,7 @@ IVF::~IVF()
         delete[] centroids;
 }
 
-ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, float distK) const
+ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, Matrix<float> &magnitudes, float err_sd, float q_mag, float distK) const
 {
     // the default value of distK is +inf
     Result *centroid_dist = new Result[C]; // will hold tuples, or "Results"
@@ -325,7 +325,7 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, flo
     ResultHeap KNNs;
 
     // FDScanning
-    if (d == D)
+    if (algoIndex == 0)
     {
         for (int i = 0; i < ncan; i++)
         {
@@ -341,7 +341,7 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, flo
         }
     }
     // ADSampling with and without cache level optimization
-    else if (d < D)
+    else
     {
         auto cur_dist = dist;
         for (int i = 0; i < nprobe; i++)
@@ -355,7 +355,11 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, flo
                 StopW stopw = StopW();
 #endif
                 // distK is our threshold to be a candidate. It starts at +inf
-                float tmp_dist = adsampling::dist_comp(distK, res_data + can * (D - d), query + d, *cur_dist, d);
+                float tmp_dist;
+                if (algoIndex == 1 || algoIndex == 2)
+                    tmp_dist = adsampling::dist_comp(distK, res_data + can * (D - d), query + d, *cur_dist, d);
+                else
+                    tmp_dist = adsampling::dist_comp_pca(distK, res_data + can * (D - d), query + d, err_sd, magnitudes.data[id[can]] + q_mag);
                 // tmp_dist is negative if the object is a negative object, otherwise it is the actual distance
                 // hence we do not need to check if tmp_dist < k before placing it on the heap
 #ifdef COUNT_DIST_TIME
@@ -375,40 +379,6 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, flo
             }
         }
     }
-
-    //     // PCA
-    //     else if (algoIndex == 3)
-    //     {
-    //         for (int i = 0; i < nprobe; i++)
-    //         {
-    //             int cluster_id = centroid_dist[i].second;
-    //             for (int j = 0; j < len[cluster_id]; j++)
-    //             {
-    //                 size_t can = start[cluster_id] + j;
-    //                 // can is the index of the start of the candidate vector in the flattened array of all data points
-    // #ifdef COUNT_DIST_TIME
-    //                 StopW stopw = StopW();
-    // #endif
-    //                 // distK is our threshold to be a candidate. It starts at +inf
-    //                 float tmp_dist = adsampling::dist_comp_pca(distK, res_data + can * (D - d), query + d, .3, 1.0);
-    //                 // tmp_dist is negative if the object is a negative object, otherwise it is the actual distance
-    //                 // hence we do not need to check if tmp_dist < k before placing it on the heap
-    // #ifdef COUNT_DIST_TIME
-    //                 adsampling::distance_time += stopw.getElapsedTimeMicro();
-    // #endif
-    //                 if (tmp_dist > 0)
-    //                 {
-    //                     KNNs.emplace(tmp_dist, id[can]);
-    //                     if (KNNs.size() > k)
-    //                         KNNs.pop();
-    //                 }
-    //                 if (KNNs.size() == k && KNNs.top().first < distK)
-    //                 {
-    //                     distK = KNNs.top().first;
-    //                 }
-    //             }
-    //         }
-    //     }
 
     delete[] centroid_dist;
     delete[] dist;

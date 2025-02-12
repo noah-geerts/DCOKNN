@@ -21,7 +21,7 @@ const int MAXK = 100;
 
 long double rotation_time = 0;
 
-void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int k, int algoIndex)
+void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int k, int algoIndex, Matrix<float> &magnitudes, Matrix<float> &variances)
 {
     using namespace std::chrono; // Import chrono functions for brevity
 
@@ -47,8 +47,32 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
             // Start timing
             auto start = high_resolution_clock::now();
 
+            // Compute error variance and magnitude of query vector
+            float err_sd;
+            float q_mag = 0;
+            if (algoIndex == 3)
+            {
+                float err_var = 0;
+                for (int j = 0; j < adsampling::D; j++)
+                {
+                    float q_j = Q.data[i * Q.d + j];
+
+                    // Error variance calculation for residuals
+                    if (j >= adsampling::delta_d)
+                    {
+                        float temp = q_j * q_j * variances.data[j];
+                        err_var += temp;
+                    }
+
+                    // Q magnitude calculation
+                    q_mag += q_j * q_j;
+                }
+                err_var *= 4;
+                err_sd = std::sqrt(err_var);
+            }
+
             // Perform the search
-            ResultHeap KNNs = ivf.search(Q.data + i * Q.d, k, nprobe, algoIndex);
+            ResultHeap KNNs = ivf.search(Q.data + i * Q.d, k, nprobe, algoIndex, magnitudes, err_sd, q_mag);
 
             // Stop timing
             auto end = high_resolution_clock::now();
@@ -119,13 +143,15 @@ int main(int argc, char *argv[])
     char dataset[256] = "";
     char transformation_path[256] = "";
     char mean_path[256] = "";
+    char variances_path[256] = "";
+    char magnitudes_path[256] = "";
 
     int algoIndex = 0;
     int subk = 0;
 
     while (iarg != -1)
     {
-        iarg = getopt_long(argc, argv, "d:i:q:g:r:t:n:k:e:p:m:", longopts, &ind);
+        iarg = getopt_long(argc, argv, "d:i:q:g:r:t:n:k:e:p:m:v:s:", longopts, &ind);
         switch (iarg)
         {
         case 'd':
@@ -172,13 +198,23 @@ int main(int argc, char *argv[])
             if (optarg)
                 strcpy(mean_path, optarg);
             break;
+        case 'v':
+            if (optarg)
+                strcpy(variances_path, optarg);
+            break;
+        case 's':
+            if (optarg)
+                strcpy(magnitudes_path, optarg);
+            break;
         }
     }
 
     Matrix<float> Q(query_path);
     Matrix<unsigned> G(groundtruth_path);
     Matrix<float> P(transformation_path);
-    Matrix<float> M(mean_path);
+    Matrix<float> mean(mean_path);
+    Matrix<float> magnitudes(magnitudes_path);
+    Matrix<float> variances(variances_path);
 
     freopen(result_path, "a", stdout);
 
@@ -193,7 +229,7 @@ int main(int argc, char *argv[])
     else if (algoIndex == 3)
     {
         StopW stopw = StopW();
-        Q.subtract_rowwise(M);
+        Q.subtract_rowwise(mean);
         Q = mul(Q, P);
         rotation_time = stopw.getElapsedTimeMicro() / Q.n;
         adsampling::D = Q.d;
@@ -202,6 +238,6 @@ int main(int argc, char *argv[])
     IVF ivf;
     ivf.load(index_path);
     // Call test with (query matrix, ground truth matrix, ivf object with index loaded, k)
-    test(Q, G, ivf, subk, algoIndex);
+    test(Q, G, ivf, subk, algoIndex, magnitudes, variances);
     return 0;
 }

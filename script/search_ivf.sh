@@ -70,14 +70,17 @@ for C in "${C_list[@]}"; do
         echo "Benchmarking with C: ${C} on ${data}"
         echo -e "Run ${current_run}/${total_runs} \n"
 
-        # File paths for index, query vectors, groundtruth, transformation matrix, and PCA mean
+        # File paths for index, query vectors, groundtruth, transformation matrix, PCA mean, data vector magnitudes, and data vector dimension variances
         index="${path}/${data}/ivf_indexes/${data}_ivf_${C}_${algoIndex}.index"
         query="${path}/${data}/${data}_query.fvecs"
         gnd="${path}/${data}/${data}_groundtruth.ivecs"
         mean="${path}/${data}/PCA_mean.fvecs"
+        variances="${path}/${data}/${data}_variances.fvecs"
+        magnitudes="${path}/${data}/${data}_magnitudes.fvecs"
+
 
         # Run program
-        echo "./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean} -k ${K}"
-        ./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean} -k ${K}
+        echo "./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean} -s ${magnitudes} -v ${variances} -k ${K}"
+        ./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean} -s ${magnitudes} -v ${variances} -k ${K}
     done
 done
