@@ -140,13 +140,14 @@ int main(int argc, char *argv[])
     char result_path[256] = "";
     char dataset[256] = "";
     char transformation_path[256] = "";
+    char mean_path[256] = "";
 
     int algoIndex = 0;
     int subk = 100;
 
     while (iarg != -1)
     {
-        iarg = getopt_long(argc, argv, "d:i:q:g:r:t:n:k:e:p:", longopts, &ind);
+        iarg = getopt_long(argc, argv, "d:i:q:g:r:t:n:k:e:p:m:", longopts, &ind);
         switch (iarg)
         {
         case 'd':
@@ -189,19 +190,41 @@ int main(int argc, char *argv[])
             if (optarg)
                 strcpy(dataset, optarg);
             break;
+        case 'm':
+            if (optarg)
+                strcpy(mean_path, optarg);
+            break;
         }
     }
+
+    std::cerr << "Index Path: " << index_path << std::endl;
+    std::cerr << "Query Path: " << query_path << std::endl;
+    std::cerr << "Groundtruth Path: " << groundtruth_path << std::endl;
+    std::cerr << "Result Path: " << result_path << std::endl;
+    std::cerr << "Dataset: " << dataset << std::endl;
+    std::cerr << "Transformation Path: " << transformation_path << std::endl;
+    std::cerr << "Algo Index: " << algoIndex << std::endl;
+    std::cerr << "Subk: " << subk << std::endl;
 
     Matrix<float> Q(query_path);
     Matrix<unsigned> G(groundtruth_path);
     Matrix<float> P(transformation_path);
+    Matrix<float> M(mean_path);
 
     freopen(result_path, "a", stdout);
 
     // run this only if algoIndex is 1 or 2 (so for HNSW+ and HNSW++)
-    if (algoIndex)
+    if (algoIndex == 1 || algoIndex == 2)
     {
         StopW stopw = StopW();
+        Q = mul(Q, P);
+        rotation_time = stopw.getElapsedTimeMicro() / Q.n;
+        adsampling::D = Q.d;
+    }
+    else if (algoIndex == 3)
+    {
+        StopW stopw = StopW();
+        Q.subtract_rowwise(M);
         Q = mul(Q, P);
         rotation_time = stopw.getElapsedTimeMicro() / Q.n;
         adsampling::D = Q.d;

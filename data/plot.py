@@ -62,6 +62,8 @@ def plot_recall_qps(file_path):
     plt.legend()
 
     # Show plot
+    if not os.path.exists(output):
+        os.makedirs(output)
     output_file = os.path.join(output, f"{data}_recall_qps.png")
     plt.savefig(output_file)
 

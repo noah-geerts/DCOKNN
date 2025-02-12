@@ -38,8 +38,8 @@ public:
         return *this;
     }
 
-    void mul(const Matrix<T> &A, Matrix<T> &result) const;
     float dist(size_t a, const Matrix<T> &B, size_t b) const;
+    void subtract_rowwise(const Matrix<T> &B);
 };
 
 template <typename T>
@@ -144,6 +144,22 @@ float Matrix<T>::dist(size_t a, const Matrix<T> &B, size_t b) const
         dist += (data[a * d + i] - B.data[b * d + i]) * (data[a * d + i] - B.data[b * d + i]);
     }
     return dist;
+}
+
+template <typename T>
+void Matrix<T>::subtract_rowwise(const Matrix<T> &B)
+{
+    // Ensure B has the correct shape (1, d)
+    assert(B.n == 1 && B.d == this->d && "The second matrix must be of shape (1, d)");
+
+    // Subtract B from each row of this matrix
+    for (size_t i = 0; i < this->n; ++i)
+    {
+        for (size_t j = 0; j < this->d; ++j)
+        {
+            this->data[i * this->d + j] -= B.data[j];
+        }
+    }
 }
 
 #endif

@@ -25,7 +25,7 @@ total_runs=$(( ${#C_list[@]} * 4))
 
 # Iterate over the values of C and each algorithm
 for C in "${C_list[@]}"; do
-algoIndex=3
+    for algoIndex in {0..3}; do
 
         current_run=$((current_run + 1))
         echo -e "\n"
@@ -43,8 +43,6 @@ algoIndex=3
             echo "IVF_PCA"
             data_file="${data_path}/${data}_base.fvecs"
             centroid_file="${data_path}/${data}_centroid_${C}.fvecs"
-            pca_data_file="${data_path}/PCA${data}_base.fvecs" # Use D-dimensional PCA-space data vectors   
-            pca_centroid_file="${data_path}/PCA${data}_centroid_${C}.fvecs" # Use PCA-space centroids
         else # raw vectors
             echo "IVF"
             data_file="${data_path}/${data}_base.fvecs"
@@ -56,8 +54,10 @@ algoIndex=3
         echo "Indexing - ${data} with C: ${C}"
         echo -e "Run ${current_run}/${total_runs} \n"
         index_file="${index_path}/${data}_ivf_${C}_${algoIndex}.index"
+        pca_data_file="${data_path}/PCA${data}_base.fvecs" # Use D-dimensional PCA-space data vectors   
+        pca_centroid_file="${data_path}/PCA${data}_centroid_${C}.fvecs" # Use PCA-space centroids
         
         # Run program
         ./src/index_ivf -d $data_file -c $centroid_file -i $index_file -a $algoIndex -p $pca_data_file -q $pca_centroid_file
-
+    done
 done

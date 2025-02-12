@@ -39,43 +39,46 @@ total_runs=$(( ${#C_list[@]} * 4))\
 
 # Iterate over the values of C and each algorithm
 for C in "${C_list[@]}"; do
-    algoIndex=3
+    for algoIndex in {0..3}; do
+        
+        current_run=$((current_run + 1))
+        echo -e "\n"
 
-    current_run=$((current_run + 1))
-    echo -e "\n"
+        # Echo which algorithm is being run and set result file to that algorithm
+        if [ $algoIndex == "1" ]
+        then 
+            echo "IVF++"
+            res="${result_path}/IVF++.log"
+            trans="${path}/${data}/O.fvecs"
+        elif [ $algoIndex == "2" ]
+        then 
+            echo "IVF+"
+            res="${result_path}/IVF+.log"
+            trans="${path}/${data}/O.fvecs"
+        elif [ $algoIndex == "3" ]
+        then 
+            echo "IVF_PCA"
+            res="${result_path}/IVF_PCA.log"
+            trans="${path}/${data}/PCA.fvecs"
+        else
+            echo "IVF"
+            res="${result_path}/IVF.log"
+            trans="${path}/${data}/O.fvecs"
+        fi
 
-    # Echo which algorithm is being run and set result file to that algorithm
-    if [ $algoIndex == "1" ]
-    then 
-        echo "IVF++"
-        res="${result_path}/IVF++.log"
-        trans="${path}/${data}/O.fvecs"
-    elif [ $algoIndex == "2" ]
-    then 
-        echo "IVF+"
-        res="${result_path}/IVF+.log"
-        trans="${path}/${data}/O.fvecs"
-    elif [ $algoIndex == "3" ]
-    then 
-        echo "IVF_PCA"
-        res="${result_path}/IVF_PCA.log"
-        trans="${path}/${data}/PCA.fvecs"
-    else
-        echo "IVF"
-        res="${result_path}/IVF.log"
-        trans="${path}/${data}/O.fvecs"
-    fi
+        # Output which C value is being benchmarked
+        echo "Benchmarking with C: ${C} on ${data}"
+        echo -e "Run ${current_run}/${total_runs} \n"
 
-    # Output which C value is being benchmarked
-    echo "Benchmarking with C: ${C} on ${data}"
-    echo -e "Run ${current_run}/${total_runs} \n"
+        # File paths for index, query vectors, groundtruth, transformation matrix, and PCA mean
+        index="${path}/${data}/ivf_indexes/${data}_ivf_${C}_${algoIndex}.index"
+        query="${path}/${data}/${data}_query.fvecs"
+        gnd="${path}/${data}/${data}_groundtruth.ivecs"
+        mean="${path}/${data}/PCA_mean.fvecs"
+        variance="${path}/${data}/${data}_variance.fvecs"
 
-    # File paths for index, query vectors, groundtruth, and transformation matrix
-    index="${path}/${data}/ivf_indexes/${data}_ivf_${C}_${algoIndex}.index"
-    query="${path}/${data}/${data}_query.fvecs"
-    gnd="${path}/${data}/${data}_groundtruth.ivecs"
-
-    # Run program
-    echo "./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -k ${K}"
-    ./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -k ${K}
+        # Run program
+        echo "./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean} -v ${variance} -k ${K}"
+        ./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean} -v ${variance} -k ${K}
+    done
 done

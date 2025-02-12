@@ -49,6 +49,9 @@ if __name__ == '__main__':
         to_fvecs(randomized_centroids_path, centroids_randomized)
 
         # pca-space centroids
-        centroids_pca = np.dot(centroids, PCA)
+        mean_path = os.path.join(path, f'PCA_mean.fvecs')
+        pca_mean = read_fvecs(mean_path)
+        print(pca_mean.shape)
+        centroids_pca = np.dot(centroids - pca_mean, PCA)
         print(centroids_pca.shape)
         to_fvecs(pca_centroids_path, centroids_pca)

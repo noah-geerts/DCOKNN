@@ -42,7 +42,7 @@ public:
     IVF(const Matrix<float> &X, const Matrix<float> &_centroids, const Matrix<float> &X_pca, const Matrix<float> &_centroids_pca);
     ~IVF();
 
-    ResultHeap search(float *query, size_t k, size_t nprobe, float distK = std::numeric_limits<float>::max()) const;
+    ResultHeap search(float *query, size_t k, size_t nprobe, int algoIndex, float distK = std::numeric_limits<float>::max()) const;
     void save(char *filename);
     void load(char *filename);
 };
@@ -93,7 +93,6 @@ IVF::IVF(const Matrix<float> &X, const Matrix<float> &_centroids, const Matrix<f
         {
             std::cerr << "Processing - " << i << " / " << X.n << std::endl;
         }
-        std::cerr << "Data point " << i << " belongs to cluster " << belong << std::endl;
         temp[belong].push_back(i); // Adds data point i's index to the vector of the cluster it belongs to
     }
     std::cerr << "Cluster Generated!" << std::endl;
@@ -184,7 +183,6 @@ IVF::IVF(const Matrix<float> &X, const Matrix<float> &_centroids, int adaptive)
         {
             std::cerr << "Processing - " << i << " / " << X.n << std::endl;
         }
-        std::cerr << "Data point " << i << " belongs to cluster " << belong << std::endl;
         temp[belong].push_back(i); // Adds data point i's index to the vector of the cluster it belongs to
     }
     std::cerr << "Cluster Generated!" << std::endl;
@@ -257,7 +255,7 @@ IVF::~IVF()
         delete[] centroids;
 }
 
-ResultHeap IVF::search(float *query, size_t k, size_t nprobe, float distK) const
+ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, float distK) const
 {
     // the default value of distK is +inf
     Result *centroid_dist = new Result[C]; // will hold tuples, or "Results"
@@ -326,10 +324,8 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, float distK) const
     }
     ResultHeap KNNs;
 
-    std::cerr << "Ncan: " << ncan << std::endl;
-    std::cerr << "k: " << k << std::endl;
-    // d == D indicates FDScanning.
-    if (d == D)
+    // FDScanning
+    if (algoIndex == 0)
     {
         for (int i = 0; i < ncan; i++)
         {
@@ -344,8 +340,8 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, float distK) const
             KNNs.emplace(candidates[i].first, candidates[i].second);
         }
     }
-    // d < D indicates ADSampling with and without cache-level optimization
-    if (d < D)
+    // ADSampling with and without cache level optimization
+    else if (algoIndex == 1 || algoIndex == 2)
     {
         auto cur_dist = dist;
         for (int i = 0; i < nprobe; i++)
@@ -376,6 +372,40 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, float distK) const
                     distK = KNNs.top().first;
                 }
                 cur_dist++;
+            }
+        }
+    }
+
+    // PCA
+    else if (algoIndex == 3)
+    {
+        for (int i = 0; i < nprobe; i++)
+        {
+            int cluster_id = centroid_dist[i].second;
+            for (int j = 0; j < len[cluster_id]; j++)
+            {
+                size_t can = start[cluster_id] + j;
+                // can is the index of the start of the candidate vector in the flattened array of all data points
+#ifdef COUNT_DIST_TIME
+                StopW stopw = StopW();
+#endif
+                // distK is our threshold to be a candidate. It starts at +inf
+                float tmp_dist = adsampling::dist_comp_pca(distK, res_data + can * (D - d), query + d, .3, 1.0);
+                // tmp_dist is negative if the object is a negative object, otherwise it is the actual distance
+                // hence we do not need to check if tmp_dist < k before placing it on the heap
+#ifdef COUNT_DIST_TIME
+                adsampling::distance_time += stopw.getElapsedTimeMicro();
+#endif
+                if (tmp_dist > 0)
+                {
+                    KNNs.emplace(tmp_dist, id[can]);
+                    if (KNNs.size() > k)
+                        KNNs.pop();
+                }
+                if (KNNs.size() == k && KNNs.top().first < distK)
+                {
+                    distK = KNNs.top().first;
+                }
             }
         }
     }

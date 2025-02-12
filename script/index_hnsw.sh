@@ -8,8 +8,7 @@ data_path=./data/${data}
 index_path=${data_path}/hnsw_indexes
 
 # Define the values for M and efConstruction
-# M_values=(12 18 24 30 36 48 60 72 84 96)
-M_values=(12)
+M_values=(12 18) #24 30 36 48 60 72 84 96)
 efConstruction_values=(500)
 
 # Make index directory if it doesn't exist

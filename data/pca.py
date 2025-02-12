@@ -37,3 +37,15 @@ if __name__ == "__main__":
     print(cov_matrix.shape)
     cov_path = os.path.join(path, f'COV.fvecs')
     to_fvecs(cov_path, cov_matrix)
+
+    # Get and store the mean of the data
+    mean_vector_2d = np.expand_dims(pca.mean_, axis=0)
+    print(mean_vector_2d.shape)
+    mean_path = os.path.join(path, f'PCA_mean.fvecs')
+    to_fvecs(mean_path, mean_vector_2d)
+
+    # Calculate variance along each dimension
+    variance_vector = np.var(X, axis=0, keepdims=True)  # Shape: (1, D)
+    print("Variance shape:", variance_vector.shape)
+    variance_path = os.path.join(path, f'{dataset}_variance.fvecs')
+    to_fvecs(variance_path, variance_vector)

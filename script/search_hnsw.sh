@@ -33,8 +33,7 @@ if [ -f ${result_path}/HNSW_PCA.log ]; then
 fi
 
 # Define the values for M and ef
-# M_values=(12 18 24 30 36 48 60 72 84 96)
-M_values=(12)
+M_values=(12 18 24 30 36 48 60 72 84 96)
 efConstruction_values=(500)
 
 # Initialize run counter
@@ -72,8 +71,8 @@ for M in "${M_values[@]}"; do
       # Output which parameter pair is being benchmarked
       echo "Benchmarking with efConstruction: ${ef} and M: ${M} on ${data}"
       echo -e "Run ${current_run}/${total_runs} \n"
-
-      ./src/search_hnsw -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans}
+      mean="${path}/${data}/PCA_mean.fvecs"
+      ./src/search_hnsw -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean}
     done
   done
 done
