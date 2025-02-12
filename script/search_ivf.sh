@@ -75,10 +75,9 @@ for C in "${C_list[@]}"; do
         query="${path}/${data}/${data}_query.fvecs"
         gnd="${path}/${data}/${data}_groundtruth.ivecs"
         mean="${path}/${data}/PCA_mean.fvecs"
-        variance="${path}/${data}/${data}_variance.fvecs"
 
         # Run program
-        echo "./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean} -v ${variance} -k ${K}"
-        ./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean} -v ${variance} -k ${K}
+        echo "./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean} -k ${K}"
+        ./src/search_ivf -d ${algoIndex} -n ${data} -i ${index} -q ${query} -g ${gnd} -r ${res} -t ${trans} -m ${mean} -k ${K}
     done
 done

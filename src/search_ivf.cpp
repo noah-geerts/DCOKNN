@@ -21,7 +21,7 @@ const int MAXK = 100;
 
 long double rotation_time = 0;
 
-void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int k, int algoIndex, Matrix<float> query_sds)
+void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int k, int algoIndex)
 {
     using namespace std::chrono; // Import chrono functions for brevity
 
@@ -48,9 +48,7 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
             auto start = high_resolution_clock::now();
 
             // Perform the search
-            // if (algoIndex == 3)
-            //     std::cerr << "Query SD: " << query_sds.data[i] << std::endl;
-            ResultHeap KNNs = ivf.search(Q.data + i * Q.d, k, algoIndex, nprobe);
+            ResultHeap KNNs = ivf.search(Q.data + i * Q.d, k, nprobe, algoIndex);
 
             // Stop timing
             auto end = high_resolution_clock::now();
@@ -108,8 +106,6 @@ int main(int argc, char *argv[])
         {"groundtruth_path", required_argument, 0, 'g'},    // path of ground truth NN indexes
         {"result_path", required_argument, 0, 'r'},         // where to write result
         {"transformation_path", required_argument, 0, 't'}, // path of transformation matrix
-        {"mean_path", required_argument, 0, 'm'},           // path of transformation matrix
-        {"variance_path", required_argument, 0, 'v'},       // path of transformation matrix
     };
 
     int ind;
@@ -123,14 +119,13 @@ int main(int argc, char *argv[])
     char dataset[256] = "";
     char transformation_path[256] = "";
     char mean_path[256] = "";
-    char variance_path[256] = "";
 
     int algoIndex = 0;
     int subk = 0;
 
     while (iarg != -1)
     {
-        iarg = getopt_long(argc, argv, "d:i:q:g:r:t:n:k:e:p:m:v:", longopts, &ind);
+        iarg = getopt_long(argc, argv, "d:i:q:g:r:t:n:k:e:p:m:", longopts, &ind);
         switch (iarg)
         {
         case 'd':
@@ -177,21 +172,15 @@ int main(int argc, char *argv[])
             if (optarg)
                 strcpy(mean_path, optarg);
             break;
-        case 'v':
-            if (optarg)
-                strcpy(variance_path, optarg);
-            break;
         }
     }
 
     Matrix<float> Q(query_path);
     Matrix<unsigned> G(groundtruth_path);
     Matrix<float> P(transformation_path);
-    Matrix<float> mean(mean_path);
-    // Matrix<float> vars(variance_path);
-    // Matrix<float> query_sds(1, Q.n);
+    Matrix<float> M(mean_path);
 
-    freopen(result_path, "a", stdout); // writes all stdout to the result path
+    freopen(result_path, "a", stdout);
 
     // run this only if algoIndex is 1 or 2 (so for IVF+ and IVF++)
     if (algoIndex == 1 || algoIndex == 2)
@@ -203,32 +192,16 @@ int main(int argc, char *argv[])
     }
     else if (algoIndex == 3)
     {
-        // perform pca projection on queries
         StopW stopw = StopW();
-        Q.subtract_rowwise(mean);
+        Q.subtract_rowwise(M);
         Q = mul(Q, P);
         rotation_time = stopw.getElapsedTimeMicro() / Q.n;
         adsampling::D = Q.d;
-
-        //     // calculate error sd for each query vector for PCA DCO
-        //     for (int i = 0; i < Q.n; i++)
-        //     {
-        //         for (int j = adsampling::delta_d; j < adsampling::D; j++)
-        //         {
-        //             float val = Q.data[i * Q.d + j] * vars.data[j];
-        //             float query_var = 0;
-        //             query_var += val * val;
-        //             float query_sd = std::sqrt(4 * query_var);
-
-        //             // store SD in matrix
-        //             query_sds.data[i] = query_sd;
-        //         }
-        //     }
     }
 
     IVF ivf;
     ivf.load(index_path);
     // Call test with (query matrix, ground truth matrix, ivf object with index loaded, k)
-    test(Q, G, ivf, subk, algoIndex, query_sds);
+    test(Q, G, ivf, subk, algoIndex);
     return 0;
 }
