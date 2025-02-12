@@ -325,7 +325,7 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, flo
     ResultHeap KNNs;
 
     // FDScanning
-    if (algoIndex == 0)
+    if (d == D)
     {
         for (int i = 0; i < ncan; i++)
         {
@@ -341,7 +341,7 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, flo
         }
     }
     // ADSampling with and without cache level optimization
-    else if (algoIndex == 1 || algoIndex == 2)
+    else if (d < D)
     {
         auto cur_dist = dist;
         for (int i = 0; i < nprobe; i++)
@@ -376,39 +376,39 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, flo
         }
     }
 
-    // PCA
-    else if (algoIndex == 3)
-    {
-        for (int i = 0; i < nprobe; i++)
-        {
-            int cluster_id = centroid_dist[i].second;
-            for (int j = 0; j < len[cluster_id]; j++)
-            {
-                size_t can = start[cluster_id] + j;
-                // can is the index of the start of the candidate vector in the flattened array of all data points
-#ifdef COUNT_DIST_TIME
-                StopW stopw = StopW();
-#endif
-                // distK is our threshold to be a candidate. It starts at +inf
-                float tmp_dist = adsampling::dist_comp_pca(distK, res_data + can * (D - d), query + d, .3, 1.0);
-                // tmp_dist is negative if the object is a negative object, otherwise it is the actual distance
-                // hence we do not need to check if tmp_dist < k before placing it on the heap
-#ifdef COUNT_DIST_TIME
-                adsampling::distance_time += stopw.getElapsedTimeMicro();
-#endif
-                if (tmp_dist > 0)
-                {
-                    KNNs.emplace(tmp_dist, id[can]);
-                    if (KNNs.size() > k)
-                        KNNs.pop();
-                }
-                if (KNNs.size() == k && KNNs.top().first < distK)
-                {
-                    distK = KNNs.top().first;
-                }
-            }
-        }
-    }
+    //     // PCA
+    //     else if (algoIndex == 3)
+    //     {
+    //         for (int i = 0; i < nprobe; i++)
+    //         {
+    //             int cluster_id = centroid_dist[i].second;
+    //             for (int j = 0; j < len[cluster_id]; j++)
+    //             {
+    //                 size_t can = start[cluster_id] + j;
+    //                 // can is the index of the start of the candidate vector in the flattened array of all data points
+    // #ifdef COUNT_DIST_TIME
+    //                 StopW stopw = StopW();
+    // #endif
+    //                 // distK is our threshold to be a candidate. It starts at +inf
+    //                 float tmp_dist = adsampling::dist_comp_pca(distK, res_data + can * (D - d), query + d, .3, 1.0);
+    //                 // tmp_dist is negative if the object is a negative object, otherwise it is the actual distance
+    //                 // hence we do not need to check if tmp_dist < k before placing it on the heap
+    // #ifdef COUNT_DIST_TIME
+    //                 adsampling::distance_time += stopw.getElapsedTimeMicro();
+    // #endif
+    //                 if (tmp_dist > 0)
+    //                 {
+    //                     KNNs.emplace(tmp_dist, id[can]);
+    //                     if (KNNs.size() > k)
+    //                         KNNs.pop();
+    //                 }
+    //                 if (KNNs.size() == k && KNNs.top().first < distK)
+    //                 {
+    //                     distK = KNNs.top().first;
+    //                 }
+    //             }
+    //         }
+    //     }
 
     delete[] centroid_dist;
     delete[] dist;
