@@ -48,31 +48,30 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
             auto start = high_resolution_clock::now();
 
             // Compute error variance and magnitude of query vector
-            float err_sd;
+            float *err_sd = new float[adsampling::D];
             float q_mag = 0;
-            if (algoIndex == 3)
+
+            if (algoIndex == 3 || algoIndex == 4)
             {
+                // Calculate running sums from back to front
                 float err_var = 0;
-                for (int j = 0; j < adsampling::D; j++)
+                for (int j = adsampling::D - 1; j >= 0; j--)
                 {
-                    float q_j = Q.data[i * Q.d + j];
-
-                    // Error variance calculation for residuals
-                    if (j >= adsampling::delta_d)
-                    {
-                        float temp = q_j * q_j * variances.data[j];
-                        err_var += temp;
-                    }
-
                     // Q magnitude calculation
+                    float q_j = Q.data[i * Q.d + j];
                     q_mag += q_j * q_j;
+
+                    // Error variance calculation
+                    err_var += q_j * q_j * variances.data[j];
+                    err_sd[j] = std::sqrt(4 * err_var);
                 }
-                err_var *= 4;
-                err_sd = std::sqrt(err_var);
             }
 
             // Perform the search
             ResultHeap KNNs = ivf.search(Q.data + i * Q.d, k, nprobe, algoIndex, magnitudes, err_sd, q_mag);
+
+            // Free err_sd array
+            delete[] err_sd;
 
             // Stop timing
             auto end = high_resolution_clock::now();
@@ -118,7 +117,7 @@ int main(int argc, char *argv[])
         {"help", no_argument, 0, 'h'},
 
         // Query Parameter
-        {"algoIndex", required_argument, 0, 'd'}, // 0, 1, or 2 for IVF, IVF+, IVF++
+        {"algoIndex", required_argument, 0, 'd'}, // 0, 1, 3, or 4 for IVF, IVF+, IVF++, IVF_PCA, IVF_APCA
         {"K", required_argument, 0, 'k'},
         {"epsilon0", required_argument, 0, 'e'},
         {"delta_d", required_argument, 0, 'p'},
@@ -218,7 +217,7 @@ int main(int argc, char *argv[])
 
     freopen(result_path, "a", stdout);
 
-    // run this only if algoIndex is 1 or 2 (so for IVF+ and IVF++)
+    // run this only if algoIndex is 1 or 2 (so for IVF+= and IVF+)
     if (algoIndex == 1 || algoIndex == 2)
     {
         StopW stopw = StopW();
@@ -226,7 +225,7 @@ int main(int argc, char *argv[])
         rotation_time = stopw.getElapsedTimeMicro() / Q.n;
         adsampling::D = Q.d;
     }
-    else if (algoIndex == 3)
+    else if (algoIndex == 3 || algoIndex == 4)
     {
         StopW stopw = StopW();
         Q.subtract_rowwise(mean);

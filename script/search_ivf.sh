@@ -32,6 +32,9 @@ fi
 if [ -f ${result_path}/IVF_PCA.log ]; then
     rm ${result_path}/IVF_PCA.log
 fi
+if [ -f ${result_path}/IVF_APCA.log ]; then
+    rm ${result_path}/IVF_APCA.log
+fi
 
 # Initialize run counter and total runs
 current_run=0
@@ -39,7 +42,7 @@ total_runs=$(( ${#C_list[@]} * 4))\
 
 # Iterate over the values of C and each algorithm
 for C in "${C_list[@]}"; do
-    for algoIndex in {0..3}; do
+    for algoIndex in {0..4}; do
         
         current_run=$((current_run + 1))
         echo -e "\n"
@@ -59,6 +62,11 @@ for C in "${C_list[@]}"; do
         then 
             echo "IVF_PCA"
             res="${result_path}/IVF_PCA.log"
+            trans="${path}/${data}/PCA.fvecs"
+        elif [ $algoIndex == "4" ]
+        then 
+            echo "IVF_APCA"
+            res="${result_path}/IVF_APCA.log"
             trans="${path}/${data}/PCA.fvecs"
         else
             echo "IVF"

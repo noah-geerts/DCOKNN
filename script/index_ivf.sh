@@ -21,11 +21,11 @@ C_list=($(echo "$sqrt_N" | bc))
 
 # Initialize run counter and total runs
 current_run=0
-total_runs=$(( ${#C_list[@]} * 4))
+total_runs=$(( ${#C_list[@]} * 5))
 
 # Iterate over the values of C and each algorithm
 for C in "${C_list[@]}"; do
-    for algoIndex in {0..3}; do
+    for algoIndex in {0..4}; do
 
         current_run=$((current_run + 1))
         echo -e "\n"
@@ -41,6 +41,10 @@ for C in "${C_list[@]}"; do
             centroid_file="${data_path}/O${data}_centroid_${C}.fvecs"
         elif [ $algoIndex == "3" ]; then # PCA-space vectors
             echo "IVF_PCA"
+            data_file="${data_path}/${data}_base.fvecs"
+            centroid_file="${data_path}/${data}_centroid_${C}.fvecs"
+        elif [ $algoIndex == "4" ]; then # PCA-space vectors
+            echo "IVF_APCA"
             data_file="${data_path}/${data}_base.fvecs"
             centroid_file="${data_path}/${data}_centroid_${C}.fvecs"
         else # raw vectors

@@ -97,11 +97,12 @@ namespace adsampling
         return res;
     }
 
-    float dist_comp_pca(const float &dis, const void *data, const void *query, const float &sigma, const float &C1,
+    float dist_comp_pca(const float &dis, const void *data, const void *query, const float *err_sd, const float &C1,
                         float m = 3)
     {
         float *q = (float *)query;
-        float *d = (float *)data;   
+        float *d = (float *)data;
+        float sigma = err_sd[delta_d];
 
         // Compute C2
         float C2 = 0;
@@ -114,7 +115,7 @@ namespace adsampling
         }
         C2 *= 2;
 
-        // Reject point if it is very far from threshold given data distribution
+        // Reject point if it is likely very far from threshold given data distribution
         float partial_dis = C1 - C2;
         if (partial_dis - m * sigma >= dis)
         {
@@ -141,7 +142,55 @@ namespace adsampling
         return C1 - C2 - C3;
     }
 
-};
+    float dist_comp_adaptive_pca(const float &dis, const void *data, const void *query, const float *err_sd, const float &C1,
+                                 float m = 3)
+    {
+        float *q = (float *)query;
+        float *d = (float *)data;
+
+        int p = 0;
+        float C2 = 0;
+        while (p < D)
+        {
+            int new_p = std::min(D, p + delta_d);
+            float temp = 0;
+            for (int i = p; i < new_p; i++)
+            {
+                float mult = *q * *d;
+                q++;
+                d++;
+                temp += mult;
+            }
+            C2 += 2 * temp;
+
+            // Return full distance if p == D
+            float partial_dis = C1 - C2;
+            if (new_p == D)
+            {
+#ifdef COUNT_DIMENSION
+                tot_dimension += new_p;
+#endif
+                return partial_dis;
+            }
+
+            // Reject point if it is likely very far from threshold given data distribution
+            float sigma = err_sd[delta_d];
+            if (partial_dis - m * sigma >= dis)
+            {
+#ifdef COUNT_DIMENSION
+                tot_dimension += new_p;
+#endif
+                return -1 * partial_dis;
+            }
+
+            // Iteratively sample more dimensions
+            p = new_p;
+        }
+
+        // This should never be reached because the loop will eventuall reach p == D
+        return 0;
+    };
+}
 
 float sqr_dist(float *a, float *b, int D)
 {

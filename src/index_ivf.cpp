@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     Matrix<float> X_pca(pca_data_path);
     Matrix<float> C_pca(pca_centroid_path);
 
-    if (adaptive == 3)
+    if (adaptive == 3 || adaptive == 4)
     {
         IVF ivf(X, C, X_pca, C_pca);
         ivf.save(index_path);

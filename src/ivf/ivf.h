@@ -42,7 +42,7 @@ public:
     IVF(const Matrix<float> &X, const Matrix<float> &_centroids, const Matrix<float> &X_pca, const Matrix<float> &_centroids_pca);
     ~IVF();
 
-    ResultHeap search(float *query, size_t k, size_t nprobe, int algoIndex, Matrix<float> &magnitudes, float err_sd, float q_mag, float distK = std::numeric_limits<float>::max()) const;
+    ResultHeap search(float *query, size_t k, size_t nprobe, int algoIndex, Matrix<float> &magnitudes, float *err_sd, float q_mag, float distK = std::numeric_limits<float>::max()) const;
     void save(char *filename);
     void load(char *filename);
 };
@@ -211,7 +211,7 @@ IVF::IVF(const Matrix<float> &X, const Matrix<float> &_centroids, int adaptive)
     else if (adaptive == 0)
         d = D; // IVF   - plain scan
     else
-        d = 0; // IVF+  - plain ADSampling
+        d = 0; // IVF+, IVF_PCA, IVF_APCA
 
     // Allocate memory for L1_data and res_data arrays
     L1_data = new float[N * d + 1];        // Flattened first d dimensions of each vector
@@ -255,7 +255,7 @@ IVF::~IVF()
         delete[] centroids;
 }
 
-ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, Matrix<float> &magnitudes, float err_sd, float q_mag, float distK) const
+ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, Matrix<float> &magnitudes, float *err_sd, float q_mag, float distK) const
 {
     // the default value of distK is +inf
     Result *centroid_dist = new Result[C]; // will hold tuples, or "Results"
@@ -358,8 +358,10 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, Mat
                 float tmp_dist;
                 if (algoIndex == 1 || algoIndex == 2)
                     tmp_dist = adsampling::dist_comp(distK, res_data + can * (D - d), query + d, *cur_dist, d);
-                else
+                else if (algoIndex == 3)
                     tmp_dist = adsampling::dist_comp_pca(distK, res_data + can * (D - d), query + d, err_sd, magnitudes.data[id[can]] + q_mag);
+                else
+                    tmp_dist = adsampling::dist_comp_adaptive_pca(distK, res_data + can * (D - d), query + d, err_sd, magnitudes.data[id[can]] + q_mag);
                 // tmp_dist is negative if the object is a negative object, otherwise it is the actual distance
                 // hence we do not need to check if tmp_dist < k before placing it on the heap
 #ifdef COUNT_DIST_TIME
