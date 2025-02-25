@@ -18,6 +18,7 @@
 using namespace std;
 
 const int MAXK = 100;
+const int NRUNS = 3;
 
 long double rotation_time = 0;
 
@@ -41,60 +42,64 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
         total_time = 0;
         adsampling::clear();
         int correct = 0;
-        std::cerr << nprobe << ", ";
-        for (int i = 0; i < Q.n; i++)
+        for (int run = 0; run < NRUNS; run++)
         {
-            // Start timing
-            auto start = high_resolution_clock::now();
-
-            // Compute error variance and magnitude of query vector
-            float *err_sd = new float[adsampling::D];
-            float q_mag = 0;
-
-            if (algoIndex == 3 || algoIndex == 4)
+            std::cerr << nprobe << "(" << run << "/" << NRUNS << ") ";
+            for (int i = 0; i < Q.n; i++)
             {
-                // Calculate running sums from back to front
-                float err_var = 0;
-                for (int j = adsampling::D - 1; j >= 0; j--)
+                // Start timing
+                auto start = high_resolution_clock::now();
+
+                // Compute error variance and magnitude of query vector
+                float *err_sd = new float[adsampling::D];
+                float q_mag = 0;
+
+                if (algoIndex == 3 || algoIndex == 4)
                 {
-                    // Q magnitude calculation
-                    float q_j = Q.data[i * Q.d + j];
-                    q_mag += q_j * q_j;
-
-                    // Error variance calculation
-                    err_var += q_j * q_j * variances.data[j];
-                    err_sd[j] = std::sqrt(4 * err_var);
-                }
-            }
-
-            // Perform the search
-            ResultHeap KNNs = ivf.search(Q.data + i * Q.d, k, nprobe, algoIndex, magnitudes, err_sd, q_mag);
-
-            // Free err_sd array
-            delete[] err_sd;
-
-            // Stop timing
-            auto end = high_resolution_clock::now();
-
-            // Calculate elapsed time in microseconds
-            auto elapsed_time = duration_cast<microseconds>(end - start).count();
-            total_time += elapsed_time;
-
-            // Recall calculation
-            while (!KNNs.empty())
-            {
-                int id = KNNs.top().second;
-                KNNs.pop();
-                for (int j = 0; j < k; j++)
-                {
-                    if (id == G.data[i * G.d + j])
+                    // Calculate running sums from back to front
+                    float err_var = 0;
+                    for (int j = adsampling::D - 1; j >= 0; j--)
                     {
-                        correct++;
+                        // Q magnitude calculation
+                        float q_j = Q.data[i * Q.d + j];
+                        q_mag += q_j * q_j;
+
+                        // Error variance calculation
+                        err_var += q_j * q_j * variances.data[j];
+                        err_sd[j] = std::sqrt(4 * err_var);
+                    }
+                }
+
+                // Perform the search
+                ResultHeap KNNs = ivf.search(Q.data + i * Q.d, k, nprobe, algoIndex, magnitudes, err_sd, q_mag);
+
+                // Stop timing
+                auto end = high_resolution_clock::now();
+
+                // Free err_sd array
+                delete[] err_sd;
+
+                // Calculate elapsed time in microseconds
+                auto elapsed_time = duration_cast<microseconds>(end - start).count();
+                total_time += elapsed_time;
+
+                // Recall calculation
+                while (!KNNs.empty())
+                {
+                    int id = KNNs.top().second;
+                    KNNs.pop();
+                    for (int j = 0; j < k; j++)
+                    {
+                        if (id == G.data[i * G.d + j])
+                        {
+                            correct++;
+                        }
                     }
                 }
             }
         }
 
+        total_time /= (float)NRUNS;
         float time_us_per_query = total_time / Q.n + rotation_time;
         float recall = 1.0f * correct / (Q.n * k);
 
