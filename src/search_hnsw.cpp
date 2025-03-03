@@ -3,7 +3,7 @@
 #define EIGEN_DONT_PARALLELIZE
 #define EIGEN_DONT_VECTORIZE
 #define COUNT_DIMENSION
-// #define COUNT_DIST_TIME
+#define COUNT_DIST_TIME
 
 #include <iostream>
 #include <fstream>
@@ -22,7 +22,7 @@ using namespace hnswlib;
 
 const int MAXK = 100;
 
-long double rotation_time = 0;
+long double rotation_time_per_query = 0;
 
 static void get_gt(unsigned int *massQA, float *massQ, size_t vecsize, size_t qsize, L2Space &l2space,
                    size_t vecdim, vector<std::priority_queue<std::pair<float, labeltype>>> &answers, size_t k, size_t subk, HierarchicalNSW<float> &appr_alg)
@@ -60,13 +60,11 @@ int recall(std::priority_queue<std::pair<float, labeltype>> &result, std::priori
 }
 
 static void test_approx(float *massQ, size_t vecsize, size_t qsize, HierarchicalNSW<float> &appr_alg, size_t vecdim,
-                        vector<std::priority_queue<std::pair<float, labeltype>>> &answers, size_t k, int adaptive)
+                        vector<std::priority_queue<std::pair<float, labeltype>>> &answers, size_t k, int algoIndex, Matrix<float> &magnitudes, Matrix<float> &variances)
 {
     size_t correct = 0;
     size_t total = 0;
     long double total_time = 0;
-
-    adsampling::clear();
 
     for (int i = 0; i < qsize; i++)
     {
@@ -75,7 +73,27 @@ static void test_approx(float *massQ, size_t vecsize, size_t qsize, Hierarchical
         struct rusage run_start, run_end;
         GetCurTime(&run_start);
 #endif
-        std::priority_queue<std::pair<float, labeltype>> result = appr_alg.searchKnn(massQ + vecdim * i, k, adaptive);
+        // Compute error variance and magnitude of query vector
+        float *err_sd = new float[vecdim];
+        float q_mag = 0;
+
+        if (algoIndex == 3 || algoIndex == 4)
+        {
+            // Calculate running sums from back to front
+            float err_var = 0;
+            for (int j = vecdim - 1; j >= 0; j--)
+            {
+                // Q magnitude calculation
+                float q_j = massQ[i * vecdim + j];
+                q_mag += q_j * q_j;
+
+                // Error variance calculation
+                err_var += q_j * q_j * variances.data[j];
+                err_sd[j] = std::sqrt(4 * err_var);
+            }
+        }
+
+        std::priority_queue<std::pair<float, labeltype>> result = appr_alg.searchKnn(massQ + vecdim * i, k, algoIndex, magnitudes, err_sd, q_mag);
 #ifndef WIN32
         GetCurTime(&run_end);
         GetTime(&run_start, &run_end, &usr_t, &sys_t);
@@ -86,25 +104,34 @@ static void test_approx(float *massQ, size_t vecsize, size_t qsize, Hierarchical
         int tmp = recall(result, gt);
         correct += tmp;
     }
-    long double time_us_per_query = total_time / qsize + rotation_time;
+    long double time_us_per_query = total_time / qsize + rotation_time_per_query;
+    long double distance_time_us_per_query = adsampling::distance_time / qsize;
     long double recall = 1.0f * correct / total;
 
     cout << recall * 100.0
          << " " << time_us_per_query
          << " " << appr_alg.ef_
-         << " " << adsampling::tot_dimension + adsampling::tot_full_dist * vecdim << endl;
+         << " " << adsampling::tot_dimension + adsampling::tot_full_dist * vecdim
+         << " " << distance_time_us_per_query
+         << " " << rotation_time_per_query
+         << std::endl;
     return;
 }
 
 static void test_vs_recall(float *massQ, size_t vecsize, size_t qsize, HierarchicalNSW<float> &appr_alg, size_t vecdim,
-                           vector<std::priority_queue<std::pair<float, labeltype>>> &answers, size_t k, int adaptive)
+                           vector<std::priority_queue<std::pair<float, labeltype>>> &answers, size_t k, int algoIndex, Matrix<float> &magnitudes, Matrix<float> &variances)
 {
     vector<size_t> efs;
-    efs.push_back(1500);
+    // EF Values to test
+    efs.push_back(100);
+    efs.push_back(200);
+    efs.push_back(400);
+    efs.push_back(800);
+    efs.push_back(1600);
     for (size_t ef : efs)
     {
         appr_alg.setEf(ef);
-        test_approx(massQ, vecsize, qsize, appr_alg, vecdim, answers, k, adaptive);
+        test_approx(massQ, vecsize, qsize, appr_alg, vecdim, answers, k, algoIndex, magnitudes, variances);
     }
 }
 
@@ -141,13 +168,15 @@ int main(int argc, char *argv[])
     char dataset[256] = "";
     char transformation_path[256] = "";
     char mean_path[256] = "";
+    char variances_path[256] = "";
+    char magnitudes_path[256] = "";
 
     int algoIndex = 0;
     int subk = 100;
 
     while (iarg != -1)
     {
-        iarg = getopt_long(argc, argv, "d:i:q:g:r:t:n:k:e:p:m:", longopts, &ind);
+        iarg = getopt_long(argc, argv, "d:i:q:g:r:t:n:k:e:p:m:v:s:", longopts, &ind);
         switch (iarg)
         {
         case 'd':
@@ -194,22 +223,23 @@ int main(int argc, char *argv[])
             if (optarg)
                 strcpy(mean_path, optarg);
             break;
+        case 'v':
+            if (optarg)
+                strcpy(variances_path, optarg);
+            break;
+        case 's':
+            if (optarg)
+                strcpy(magnitudes_path, optarg);
+            break;
         }
     }
-
-    std::cerr << "Index Path: " << index_path << std::endl;
-    std::cerr << "Query Path: " << query_path << std::endl;
-    std::cerr << "Groundtruth Path: " << groundtruth_path << std::endl;
-    std::cerr << "Result Path: " << result_path << std::endl;
-    std::cerr << "Dataset: " << dataset << std::endl;
-    std::cerr << "Transformation Path: " << transformation_path << std::endl;
-    std::cerr << "Algo Index: " << algoIndex << std::endl;
-    std::cerr << "Subk: " << subk << std::endl;
 
     Matrix<float> Q(query_path);
     Matrix<unsigned> G(groundtruth_path);
     Matrix<float> P(transformation_path);
     Matrix<float> M(mean_path);
+    Matrix<float> magnitudes(magnitudes_path);
+    Matrix<float> variances(variances_path);
 
     freopen(result_path, "a", stdout);
 
@@ -218,15 +248,15 @@ int main(int argc, char *argv[])
     {
         StopW stopw = StopW();
         Q = mul(Q, P);
-        rotation_time = stopw.getElapsedTimeMicro() / Q.n;
+        rotation_time_per_query = stopw.getElapsedTimeMicro() / Q.n;
         adsampling::D = Q.d;
     }
-    else if (algoIndex == 3)
+    else if (algoIndex == 3 || algoIndex == 4)
     {
         StopW stopw = StopW();
         Q.subtract_rowwise(M);
         Q = mul(Q, P);
-        rotation_time = stopw.getElapsedTimeMicro() / Q.n;
+        rotation_time_per_query = stopw.getElapsedTimeMicro() / Q.n;
         adsampling::D = Q.d;
     }
 
@@ -238,7 +268,7 @@ int main(int argc, char *argv[])
     vector<std::priority_queue<std::pair<float, labeltype>>> answers;
 
     get_gt(G.data, Q.data, appr_alg->max_elements_, Q.n, l2space, Q.d, answers, k, subk, *appr_alg);
-    test_vs_recall(Q.data, appr_alg->max_elements_, Q.n, *appr_alg, Q.d, answers, subk, algoIndex);
+    test_vs_recall(Q.data, appr_alg->max_elements_, Q.n, *appr_alg, Q.d, answers, subk, algoIndex, magnitudes, variances);
 
     return 0;
 }

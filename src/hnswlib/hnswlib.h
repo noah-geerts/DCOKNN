@@ -172,7 +172,7 @@ namespace hnswlib
     {
     public:
         virtual void addPoint(const void *datapoint, labeltype label) = 0;
-        virtual std::priority_queue<std::pair<dist_t, labeltype>> searchKnn(void *, size_t, int) const = 0;
+        virtual std::priority_queue<std::pair<dist_t, labeltype>> searchKnn(void *query_data, size_t k, int adaptive, Matrix<float> &magnitudes, float *err_sd, float q_mag) const = 0;
 
         // Return k nearest neighbor in the order of closer fist
         virtual std::vector<std::pair<dist_t, labeltype>>
@@ -190,8 +190,13 @@ namespace hnswlib
     {
         std::vector<std::pair<dist_t, labeltype>> result;
 
-        // here searchKnn returns the result in the order of further first
-        auto ret = searchKnn(query_data, k, 0);
+        // Create a dummy Matrix<float> object
+        Matrix<float> dummy_magnitudes;
+        float *dummy_err_sd = nullptr;
+        float dummy_q_mag = 0;
+
+        // Call searchKnn with the dummy objects
+        auto ret = searchKnn(query_data, k, 0, dummy_magnitudes, dummy_err_sd, dummy_q_mag);
         {
             size_t sz = ret.size();
             result.resize(sz);

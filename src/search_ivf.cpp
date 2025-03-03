@@ -1,7 +1,7 @@
 #define EIGEN_DONT_PARALLELIZE
 #define EIGEN_DONT_VECTORIZE
 #define COUNT_DIMENSION
-// #define COUNT_DIST_TIME
+#define COUNT_DIST_TIME
 
 #include <iostream>
 #include <fstream>
@@ -18,9 +18,9 @@
 using namespace std;
 
 const int MAXK = 100;
-const int NRUNS = 3;
+const int NRUNS = 3; // Average results over NRUNS identical runs
 
-long double rotation_time = 0;
+long double rotation_time_per_query = 0;
 
 void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int k, int algoIndex, Matrix<float> &magnitudes, Matrix<float> &variances)
 {
@@ -99,15 +99,21 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
             }
         }
 
-        total_time /= (float)NRUNS;
-        float time_us_per_query = total_time / Q.n + rotation_time;
+        total_time /= (float) NRUNS;
+        float time_us_per_query = total_time / Q.n + rotation_time_per_query;
+        float distance_time_us_per_query = adsampling::distance_time / Q.n;
+        distance_time_us_per_query /= (float) NRUNS;
         float recall = 1.0f * correct / (Q.n * k);
+        recall /= (float) NRUNS;
 
         // Print results
         std::cout << recall * 100.00
                   << " " << time_us_per_query
                   << " " << nprobe
-                  << " " << adsampling::tot_dimension << std::endl;
+                  << " " << adsampling::tot_dimension
+                  << " " << distance_time_us_per_query
+                  << " " << rotation_time_per_query
+                  << std::endl;
     }
 }
 
@@ -227,7 +233,7 @@ int main(int argc, char *argv[])
     {
         StopW stopw = StopW();
         Q = mul(Q, P);
-        rotation_time = stopw.getElapsedTimeMicro() / Q.n;
+        rotation_time_per_query = stopw.getElapsedTimeMicro() / Q.n;
         adsampling::D = Q.d;
     }
     else if (algoIndex == 3 || algoIndex == 4)
@@ -235,7 +241,7 @@ int main(int argc, char *argv[])
         StopW stopw = StopW();
         Q.subtract_rowwise(mean);
         Q = mul(Q, P);
-        rotation_time = stopw.getElapsedTimeMicro() / Q.n;
+        rotation_time_per_query = stopw.getElapsedTimeMicro() / Q.n;
         adsampling::D = Q.d;
     }
 

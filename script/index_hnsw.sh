@@ -8,37 +8,31 @@ data_path=./data/${data}
 index_path=${data_path}/hnsw_indexes
 
 # Define the values for M and efConstruction
-M_values=(12 18) #24 30 36 48 60 72 84 96)
-efConstruction_values=(500)
+M=16
+efConstruction=500
 
 # Make index directory if it doesn't exist
 if [ ! -d ${index_path} ]; then
     mkdir -p ${index_path}
 fi
 
-# Iterate over the values of M and efConstruction
-for M in "${M_values[@]}"; do
-  for efConstruction in "${efConstruction_values[@]}"; do
+# Output which index is being built
+echo -e "\nIndexing - ${data} with M=${M} and efConstruction=${efConstruction}" 
 
-    # Output which index is being built
-    index_count=$((index_count + 1))
-    total_indexes=$(( ${#M_values[@]} * ${#efConstruction_values[@]} ))
-    echo -e "\nIndexing - ${data} with M=${M} and efConstruction=${efConstruction}" 
-    echo -e "Building index $index_count/$total_indexes\n"
+#Create hsnw index on base vectors
+echo -e "\nIndexing base vectors"
+data_file="${data_path}/${data}_base.fvecs"
+index_file="${index_path}/${data}_ef${efConstruction}_M${M}.index"
+./src/index_hnsw -d $data_file -i $index_file -e $efConstruction -m $M
 
-    #Create hsnw index on base vectors
-    data_file="${data_path}/${data}_base.fvecs"
-    index_file="${index_path}/${data}_ef${efConstruction}_M${M}.index"
-    ./src/index_hnsw -d $data_file -i $index_file -e $efConstruction -m $M
+#Create hnsw index on randomly rotated vectors
+echo -e "\nIndexing rotated vectors"
+data_file="${data_path}/O${data}_base.fvecs"
+index_file="${index_path}/O${data}_ef${efConstruction}_M${M}.index"
+./src/index_hnsw -d $data_file -i $index_file -e $efConstruction -m $M
 
-    #Create hnsw index on randomly rotated vectors
-    data_file="${data_path}/O${data}_base.fvecs"
-    index_file="${index_path}/O${data}_ef${efConstruction}_M${M}.index"
-    ./src/index_hnsw -d $data_file -i $index_file -e $efConstruction -m $M
-
-    #Create hnsw index on PCA vectors
-    data_file="${data_path}/PCA${data}_base.fvecs"
-    index_file="${index_path}/PCA${data}_ef${efConstruction}_M${M}.index"
-    ./src/index_hnsw -d $data_file -i $index_file -e $efConstruction -m $M
-  done
-done
+#Create hnsw index on PCA vectors
+echo -e "\nIndexing pca-space vectors"
+data_file="${data_path}/PCA${data}_base.fvecs"
+index_file="${index_path}/PCA${data}_ef${efConstruction}_M${M}.index"
+./src/index_hnsw -d $data_file -i $index_file -e $efConstruction -m $M
