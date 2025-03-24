@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import os
 import argparse
+import glob
 
-data = "gist"
 source = "../results"
 output = "./plots"
 
@@ -34,7 +34,7 @@ def read_log_files(directory, algorithm):
     # Results is an array of tuples (file_name, [(recall %, time per query in microseconds), ...])
     return results
 
-def plot_recall_qps(file_path, algorithm):
+def plot_recall_qps(file_path, algorithm, dataset):
     # Results is an array of tuples (file_name, [(recall %, time per query in microseconds), ...])
     results = read_log_files(file_path, algorithm)
 
@@ -64,11 +64,11 @@ def plot_recall_qps(file_path, algorithm):
     # Show plot
     if not os.path.exists(output):
         os.makedirs(output)
-    output_file = os.path.join(output, f"{data}_{algorithm}_recall_qps.png")
+    output_file = os.path.join(output, f"{dataset}_{algorithm}_recall_qps.png")
     plt.savefig(output_file)
     plt.close()
 
-def plot_total_dimensions(file_path, algorithm):
+def plot_total_dimensions(file_path, algorithm, dataset):
     # Get results for each variant
     results = read_log_files(file_path, algorithm)
     
@@ -114,11 +114,11 @@ def plot_total_dimensions(file_path, algorithm):
     # Save the plot
     if not os.path.exists(output):
         os.makedirs(output)
-    output_file = os.path.join(output, f"{data}_{algorithm}_best_recall_dimensions.png")
+    output_file = os.path.join(output, f"{dataset}_{algorithm}_best_recall_dimensions.png")
     plt.savefig(output_file)
     plt.close()
 
-def plot_time_breakdown(file_path, algorithm):
+def plot_time_breakdown(file_path, algorithm, dataset):
     # Get results for each variant
     results = read_log_files(file_path, algorithm)
     
@@ -208,7 +208,133 @@ def plot_time_breakdown(file_path, algorithm):
     # Save the plot
     if not os.path.exists(output):
         os.makedirs(output)
-    output_file = os.path.join(output, f"{data}_{algorithm}_time_breakdown.png")
+    output_file = os.path.join(output, f"{dataset}_{algorithm}_time_breakdown.png")
+    plt.savefig(output_file)
+    plt.close()
+
+def read_index_time(file_path):
+    """Read the total time from an index log file."""
+    with open(file_path, 'r') as file:
+        # Read the last line which contains the total time
+        lines = file.readlines()
+        if lines:
+            return int(lines[-1].strip())
+    return 0
+
+def read_projection_time(file_path):
+    """Read the projection time from a projection log file."""
+    with open(file_path, 'r') as file:
+        return int(file.readline().strip())
+
+def plot_indexing_breakdown(file_path, algorithm, dataset):
+    # Base paths
+    index_results_dir = os.path.join('..', 'index_results', dataset)
+    results_dir = os.path.join('..', 'index_results', dataset)
+    
+    # Initialize data structures
+    variants = []
+    index_times = []
+    projection_times = []
+    
+    if algorithm == 'HNSW':
+        # HNSW variants
+        variants = ['HNSW', 'HNSW+/++', 'HNSW_PCA/APCA']
+        
+        # Base HNSW
+        index_file = os.path.join(results_dir, 'HNSW_index_ef500_M16.log')
+        index_times.append(read_index_time(index_file))
+        projection_times.append(0)  # No projection for base
+        
+        # ADS HNSW
+        index_file = os.path.join(results_dir, 'HNSW_ADS_index_ef500_M16.log')
+        index_times.append(read_index_time(index_file))
+        projection_file = os.path.join(index_results_dir, 'ADS_projection.log')
+        projection_times.append(read_projection_time(projection_file))
+        
+        # APCA HNSW
+        index_file = os.path.join(results_dir, 'HNSW_APCA_index_ef500_M16.log')
+        index_times.append(read_index_time(index_file))
+        projection_file = os.path.join(index_results_dir, 'PCA_projection.log')
+        projection_times.append(read_projection_time(projection_file))
+        
+    else:  # IVF
+        # IVF variants
+        variants = ['IVF', 'IVF+/++', 'IVF_PCA/APCA']
+        
+        # Base IVF
+        index_files = glob.glob(os.path.join(results_dir, 'IVF_index_*.log'))
+        index_time = sum(read_index_time(f) for f in index_files)
+        clustering_time = read_projection_time(os.path.join(index_results_dir, 'IVF_clustering.log'))
+        index_times.append(index_time + clustering_time)
+        projection_times.append(0)  # No projection for base
+        
+        # ADS IVF
+        index_files = glob.glob(os.path.join(results_dir, 'IVF_ADS_index_*.log'))
+        index_time = sum(read_index_time(f) for f in index_files)
+        clustering_time = read_projection_time(os.path.join(index_results_dir, 'IVF_clustering.log'))
+        index_times.append(index_time + clustering_time)
+        projection_time = (read_projection_time(os.path.join(index_results_dir, 'ADS_projection.log')) +
+                         read_projection_time(os.path.join(index_results_dir, 'IVF_ADS_clustering.log')))
+        projection_times.append(projection_time)
+        
+        # APCA IVF
+        index_files = glob.glob(os.path.join(results_dir, 'IVF_APCA_index_*.log'))
+        index_time = sum(read_index_time(f) for f in index_files)
+        clustering_time = read_projection_time(os.path.join(index_results_dir, 'IVF_clustering.log'))
+        index_times.append(index_time + clustering_time)
+        projection_time = (read_projection_time(os.path.join(index_results_dir, 'PCA_projection.log')) +
+                         read_projection_time(os.path.join(index_results_dir, 'IVF_APCA_clustering.log')))
+        projection_times.append(projection_time)
+    
+    # Create stacked bar plot
+    plt.figure(figsize=(10, 6))
+    
+    # Create bars
+    bar_width = 0.8
+    bars_positions = range(len(variants))
+    
+    # Create the stacked bars
+    plt.bar(bars_positions, index_times, bar_width, 
+            label='Index Building', color='#2ecc71')
+    plt.bar(bars_positions, projection_times, bar_width, 
+            bottom=index_times, label='Projection', color='#3498db')
+    
+    # Customize the plot
+    plt.title(f'Indexing Time Breakdown for {algorithm} Variants')
+    plt.xlabel('Algorithm Variant')
+    plt.ylabel('Time (μs)')
+    plt.xticks(bars_positions, variants)
+    
+    # Add value labels on the bars
+    for i in range(len(variants)):
+        total_height = index_times[i] + projection_times[i]
+        
+        # Add total time at the top
+        plt.text(i, total_height + (max([sum(x) for x in zip(index_times, projection_times)]) * 0.03), 
+                f'{total_height:,}μs', 
+                ha='center', va='bottom')
+        
+        # Add percentage labels in the middle of each segment
+        if index_times[i] > 0:
+            plt.text(i, index_times[i]/2, 
+                    f'{(index_times[i] / total_height * 100):.1f}%', 
+                    ha='center', va='center')
+        
+        if projection_times[i] > 0:
+            plt.text(i, index_times[i] + projection_times[i]/2,
+                    f'{(projection_times[i] / total_height * 100):.1f}%', 
+                    ha='center', va='center')
+    
+    # Add padding at the top for labels (20% padding)
+    plt.ylim(0, max([sum(x) for x in zip(index_times, projection_times)]) * 1.2)
+    
+    plt.legend(loc='upper right')
+    plt.tight_layout()
+    
+    # Save the plot
+    if not os.path.exists(output):
+        os.makedirs(output)
+    output_file = os.path.join(output, f"{dataset}_{algorithm}_indexing_breakdown.png")
     plt.savefig(output_file)
     plt.close()
 
@@ -217,6 +343,7 @@ PLOT_FUNCTIONS = {
     'qps': plot_recall_qps,
     'total_dimensions': plot_total_dimensions,
     'time_breakdown': plot_time_breakdown,
+    'indexing_breakdown': plot_indexing_breakdown,
     # Add more plot types here as they are implemented
     # 'memory': plot_memory_usage,
     # etc.
@@ -227,6 +354,7 @@ def main():
     parser = argparse.ArgumentParser(description='Generate performance plots for ANN algorithms')
     parser.add_argument('algorithm', choices=['IVF', 'HNSW'], help='Algorithm to plot (IVF or HNSW)')
     parser.add_argument('plot_type', choices=list(PLOT_FUNCTIONS.keys()), help='Type of plot to generate')
+    parser.add_argument('data', choices=['gist', 'glove1.2m'], help='Dataset to plot')
     
     # Parse arguments
     args = parser.parse_args()
@@ -235,7 +363,7 @@ def main():
     plot_function = PLOT_FUNCTIONS[args.plot_type]
     
     # Call the plotting function with the appropriate arguments
-    plot_function(os.path.join(source, data), args.algorithm)
+    plot_function(os.path.join(source, args.data), args.algorithm, args.data)
 
 if __name__ == '__main__':
     main()

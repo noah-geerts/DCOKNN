@@ -60,26 +60,50 @@ def read_ivecs(filename, c_contiguous=True):
         iv = iv.copy()
     return iv
 
-def to_fvecs(filename, data):
+def to_fvecs(filename, data, batch_size=100000):
     print(f"Writing File - {filename}")
+    # Convert data to numpy array if it isn't already
+    data = np.asarray(data)
+    n, d = data.shape
+    
+    # Write in batches
     with open(filename, 'wb') as fp:
-        for y in data:
-            d = struct.pack('I', len(y))
-            fp.write(d)
-            for x in y:
-                a = struct.pack('f', x)
-                fp.write(a)
+        for i in range(0, n, batch_size):
+            end_idx = min(i + batch_size, n)
+            batch = data[i:end_idx]
+            
+            # Write header for this batch
+            header = np.full(end_idx - i, d, dtype=np.uint32)
+            header.tofile(fp)
+            
+            # Write batch data
+            batch.astype(np.float32).tofile(fp)
+            
+            print(f"Wrote batch {i//batch_size + 1}/{(n + batch_size - 1)//batch_size}")
 
-def to_ivecs(filename, data):
+def to_ivecs(filename, data, batch_size=10000):
     print(f"Writing File - {filename}")
+    # Convert data to numpy array if it isn't already
+    data = np.asarray(data)
+    n, d = data.shape
+    
+    # Create directory if it doesn't exist
     os.makedirs(os.path.dirname(filename), exist_ok=True)
+    
+    # Write in batches
     with open(filename, 'wb') as fp:
-        for y in data:
-            d = struct.pack('I', len(y))
-            fp.write(d)
-            for x in y:
-                a = struct.pack('i', x)
-                fp.write(a)
+        for i in range(0, n, batch_size):
+            end_idx = min(i + batch_size, n)
+            batch = data[i:end_idx]
+            
+            # Write header for this batch
+            header = np.full(end_idx - i, d, dtype=np.uint32)
+            header.tofile(fp)
+            
+            # Write batch data
+            batch.astype(np.int32).tofile(fp)
+            
+            print(f"Wrote batch {i//batch_size + 1}/{(n + batch_size - 1)//batch_size}")
 
 def reduce(dataset):
     # write reduced number of vectors

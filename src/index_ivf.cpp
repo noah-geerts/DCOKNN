@@ -3,7 +3,7 @@
 #include <queue>
 #include <getopt.h>
 #include <unordered_set>
-
+#include <chrono>
 #include "matrix.h"
 #include "utils.h"
 #include "ivf/ivf.h"
@@ -37,12 +37,13 @@ int main(int argc, char *argv[])
     char centroid_path[256] = "";
     char pca_data_path[256] = "";
     char pca_centroid_path[256] = "";
+    char result_path[256] = "";
 
     size_t adaptive = 0;
 
     while (iarg != -1)
     {
-        iarg = getopt_long(argc, argv, "a:d:c:i:p:q:", longopts, &ind);
+        iarg = getopt_long(argc, argv, "a:d:c:i:p:q:r:", longopts, &ind);
         switch (iarg)
         {
         case 'a':
@@ -81,8 +82,18 @@ int main(int argc, char *argv[])
                 strcpy(pca_centroid_path, optarg);
             }
             break;
+        case 'r':
+            if (optarg)
+            {
+                strcpy(result_path, optarg);
+            }
+            break;
         }
     }
+
+    // Start timing
+    using namespace std::chrono;
+    auto start = high_resolution_clock::now();
 
     Matrix<float> X(data_path);
     Matrix<float> C(centroid_path);
@@ -99,6 +110,14 @@ int main(int argc, char *argv[])
         IVF ivf(X, C, adaptive);
         ivf.save(index_path);
     }
+
+    // Stop timing
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(end - start);
+    freopen(result_path, "a", stdout);
+    cout << duration.count() << endl;
+    fclose(stdout);
+    return 0;
 
     return 0;
 }

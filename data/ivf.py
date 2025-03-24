@@ -2,6 +2,7 @@ import numpy as np
 import faiss
 import os
 from fvec import read_fvecs, to_fvecs
+import time
 
 source = './'
 dataset = 'gist'
@@ -36,22 +37,48 @@ if __name__ == '__main__':
 
         D = X.shape[1]
         
-        # cluster data vectors
+        # Time the clustering process
+        start_time = time.perf_counter()
         index = faiss.index_factory(D, f"IVF{K},Flat")
         index.verbose = True
         index.train(X)
         centroids = index.quantizer.reconstruct_n(0, index.nlist)
-        to_fvecs(centroids_path, centroids)
+        end_time = time.perf_counter()
+        clustering_time = int((end_time - start_time) * 1e6)  # Convert to microseconds
+        
+        # Save clustering time
+        result_dir = os.path.join('..', 'index_results', dataset)
+        os.makedirs(result_dir, exist_ok=True)
+        with open(os.path.join(result_dir, 'IVF_clustering.log'), 'w') as f:
+            f.write(f"{clustering_time}\n")
 
-        # randomized centroids
+        # Time the randomized projection
+        start_time = time.perf_counter()
         centroids_randomized = np.dot(centroids, O)
-        print(centroids_randomized.shape)
-        to_fvecs(randomized_centroids_path, centroids_randomized)
+        end_time = time.perf_counter()
+        randomized_time = int((end_time - start_time) * 1e6)  # Convert to microseconds
+        
+        # Save randomized projection time
+        with open(os.path.join(result_dir, 'IVF_ADS_clustering.log'), 'w') as f:
+            f.write(f"{randomized_time}\n")
 
-        # pca-space centroids
+        # Time the PCA projection
+        start_time = time.perf_counter()
         mean_path = os.path.join(path, f'PCA_mean.fvecs')
         pca_mean = read_fvecs(mean_path)
-        print(pca_mean.shape)
         centroids_pca = np.dot(centroids - pca_mean, PCA)
-        print(centroids_pca.shape)
+        end_time = time.perf_counter()
+        pca_time = int((end_time - start_time) * 1e6)  # Convert to microseconds
+        
+        # Save PCA projection time
+        with open(os.path.join(result_dir, 'IVF_APCA_clustering.log'), 'w') as f:
+            f.write(f"{pca_time}\n")
+
+        print(f"Clustering time: {clustering_time} microseconds")
+        print(f"Randomized projection time: {randomized_time} microseconds")
+        print(f"PCA projection time: {pca_time} microseconds")
+
+        # Write all vectors and matrices after timing
         to_fvecs(pca_centroids_path, centroids_pca)
+        to_fvecs(randomized_centroids_path, centroids_randomized)
+        to_fvecs(centroids_path, centroids)

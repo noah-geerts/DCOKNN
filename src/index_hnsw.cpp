@@ -3,7 +3,7 @@
 #include <queue>
 #include <getopt.h>
 #include <unordered_set>
-
+#include <chrono>
 #include "matrix.h"
 #include "utils.h"
 #include "hnswlib/hnswlib.h"
@@ -24,6 +24,7 @@ int main(int argc, char * argv[]) {
         // Indexing Path 
         {"data_path",                   required_argument, 0, 'd'},
         {"index_path",                  required_argument, 0, 'i'},
+        {"result_file",                 required_argument, 0, 'r'},
     };
 
     int ind;
@@ -32,12 +33,12 @@ int main(int argc, char * argv[]) {
 
     char index_path[256] = "";
     char data_path[256] = "";
-
+    char result_file[256] = "";
     size_t efConstruction = 0;
     size_t M = 0;
 
     while(iarg != -1){
-        iarg = getopt_long(argc, argv, "e:d:i:m:", longopts, &ind);
+        iarg = getopt_long(argc, argv, "e:d:i:m:r:", longopts, &ind);
         switch (iarg){
             case 'e': 
                 if(optarg){
@@ -59,9 +60,18 @@ int main(int argc, char * argv[]) {
                     strcpy(index_path, optarg);
                 }
                 break;
+            case 'r':
+                if(optarg){
+                    strcpy(result_file, optarg);
+                }
+                break;
         }
     }
     
+    // Start timing
+    using namespace std::chrono;
+    auto start = high_resolution_clock::now();
+
     //Matrix contains all the vectors for the specified data path
     Matrix<float> *X = new Matrix<float>(data_path);
     size_t D = X->d;
@@ -81,5 +91,12 @@ int main(int argc, char * argv[]) {
     }
 
     appr_alg->saveIndex(index_path);
+
+    // Stop timing
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(end - start);
+    freopen(result_file, "a", stdout);
+    cout << duration.count() << endl;
+    fclose(stdout);
     return 0;
 }

@@ -28,7 +28,8 @@ The tested datasets are available at https://www.cse.cuhk.edu.hk/systems/hash/gq
 
 3. Optional: rename the gist data file (or other dataset) to [dataset name]\_raw,
    and run fvec.py to reduce the number of dataset vectors 100x and number
-   of query vectors 10x
+   of query vectors 10x. This can be used for setting up the repository
+   so that everything runs more quickly.
 
 4. Preprocess the dataset with random orthogonal transformation.
 
@@ -36,7 +37,13 @@ The tested datasets are available at https://www.cse.cuhk.edu.hk/systems/hash/gq
    python randomize.py
    ```
 
-5. Generate the clustering of the dataset for IVF.
+5. Preprocess the dataset with PCA transformation.
+
+   ```shell
+   python randomize.py
+   ```
+
+6. Generate the clustering of the dataset for IVF.
 
    ```shell
    python ivf.py
