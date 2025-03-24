@@ -1,5 +1,3 @@
-
-
 #define EIGEN_DONT_PARALLELIZE
 #define EIGEN_DONT_VECTORIZE
 #define COUNT_DIMENSION
@@ -130,6 +128,8 @@ static void test_vs_recall(float *massQ, size_t vecsize, size_t qsize, Hierarchi
     efs.push_back(1600);
     for (size_t ef : efs)
     {
+        // Reset timing variables for each EF test
+        adsampling::distance_time = 0;
         appr_alg.setEf(ef);
         test_approx(massQ, vecsize, qsize, appr_alg, vecdim, answers, k, algoIndex, magnitudes, variances);
     }

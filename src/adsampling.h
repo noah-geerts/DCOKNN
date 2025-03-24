@@ -174,7 +174,7 @@ namespace adsampling
             }
 
             // Reject point if it is likely very far from threshold given data distribution
-            float sigma = err_sd[delta_d];
+            float sigma = err_sd[new_p];
             if (partial_dis - m * sigma >= dis)
             {
 #ifdef COUNT_DIMENSION

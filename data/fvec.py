@@ -94,6 +94,7 @@ def reduce(dataset):
         
         # randomly sample 1/100th or 1/10th of the original vectors for base and query vectors respectively
         X = X[np.random.choice(n, n//reduction_factor, replace=False)]
+        print(X.shape)
 
         # write the reduced vectors to a new file
         path = os.path.join(source, dataset)

@@ -18,7 +18,6 @@
 using namespace std;
 
 const int MAXK = 100;
-const int NRUNS = 3; // Average results over NRUNS identical runs
 
 long double rotation_time_per_query = 0;
 
@@ -27,7 +26,8 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
     using namespace std::chrono; // Import chrono functions for brevity
 
     float total_time = 0, search_time = 0;
-    std::vector<int> nprobes = {8, 10, 13, 16, 19, 24, 29, 40, 50, 60};
+    float base_nprobes = std::sqrt(ivf.C);
+    std::vector<int> nprobes = {(int)(0.25*base_nprobes), (int)(0.5*base_nprobes), (int)base_nprobes, (int)2*base_nprobes, (int)4*base_nprobes, (int)8*base_nprobes};
     // if (ivf.C > 100)
     // {
     //     nprobes = {10, 12, 14, 16, 18, 20};
@@ -42,17 +42,15 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
         total_time = 0;
         adsampling::clear();
         int correct = 0;
-        for (int run = 0; run < NRUNS; run++)
-        {
-            std::cerr << nprobe << "(" << run << "/" << NRUNS << ") ";
+            std::cerr << nprobe << " ";
             for (int i = 0; i < Q.n; i++)
             {
                 // Start timing
                 auto start = high_resolution_clock::now();
 
                 // Compute error variance and magnitude of query vector
-                float *err_sd = new float[adsampling::D];
                 float q_mag = 0;
+                float *err_sd = new float[adsampling::D];
 
                 if (algoIndex == 3 || algoIndex == 4)
                 {
@@ -97,14 +95,11 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
                     }
                 }
             }
-        }
+        
 
-        total_time /= (float) NRUNS;
         float time_us_per_query = total_time / Q.n + rotation_time_per_query;
         float distance_time_us_per_query = adsampling::distance_time / Q.n;
-        distance_time_us_per_query /= (float) NRUNS;
         float recall = 1.0f * correct / (Q.n * k);
-        recall /= (float) NRUNS;
 
         // Print results
         std::cout << recall * 100.00
