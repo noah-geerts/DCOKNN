@@ -15,8 +15,10 @@ def read_log_file(file_path):
             parts = line.strip().split()
             
             try:
-                # Tuple of data in the form (recall %, time per query in microseconds, nprobe, total dimensions sampled, distance time per query in microseconds, rotation time per query in microseconds)
-                data_tuple = (float(parts[0]), float(parts[1]), int(parts[2]), int(parts[3]), float(parts[4]), float(parts[5]))
+                # Tuple of data in the form (recall %, time per query in microseconds, nprobe, total dimensions sampled, 
+                # distance time per query in microseconds, rotation time per query in microseconds, positive objects, negative objects)
+                data_tuple = (float(parts[0]), float(parts[1]), int(parts[2]), int(parts[3]), 
+                            float(parts[4]), float(parts[5]), int(parts[6]), int(parts[7]))
                 recall_qps.append(data_tuple)
             except ValueError as e:
                 print(f"Error converting line to tuple: {line.strip()} - {e}")
@@ -338,12 +340,90 @@ def plot_indexing_breakdown(file_path, algorithm, dataset):
     plt.savefig(output_file)
     plt.close()
 
+def plot_object_breakdown(file_path, algorithm, dataset):
+    # Get results for each variant
+    results = read_log_files(file_path, algorithm)
+    
+    # For each algorithm variant, find the run with highest recall
+    algo_names = []
+    positive_objects = []
+    negative_objects = []
+    recalls = []
+    
+    for algo_name, measurements in results:
+        # Skip base algorithm log files
+        if algo_name == algorithm:
+            continue
+            
+        algo_names.append(algo_name)
+        
+        # Find the measurement with highest recall
+        max_recall_measurement = max(measurements, key=lambda x: x[0])
+        
+        # Extract object counts
+        positive_objects.append(max_recall_measurement[6])  # positive objects
+        negative_objects.append(max_recall_measurement[7])  # negative objects
+        recalls.append(max_recall_measurement[0])
+    
+    # Create stacked bar plot
+    plt.figure(figsize=(12, 6))
+    
+    # Create bars
+    bar_width = 0.8
+    bars_positions = range(len(algo_names))
+    
+    # Create the stacked bars
+    plt.bar(bars_positions, positive_objects, bar_width, 
+            label='Positive Objects', color='#2ecc71')
+    plt.bar(bars_positions, negative_objects, bar_width, 
+            bottom=positive_objects, label='Negative Objects', color='#e74c3c')
+    
+    # Customize the plot
+    plt.title(f'Object Breakdown at Best Recall by {algorithm} Variants')
+    plt.xlabel('Algorithm Variant')
+    plt.ylabel('Number of Objects')
+    plt.xticks(bars_positions, algo_names, rotation=45, ha='right')
+    
+    # Add value labels on the bars
+    for i in range(len(algo_names)):
+        total_objects = positive_objects[i] + negative_objects[i]
+        
+        # Add recall and total objects at the top
+        plt.text(i, total_objects + (max([sum(x) for x in zip(positive_objects, negative_objects)]) * 0.03), 
+                f'({recalls[i]:.1f}% recall)\n{total_objects:,} objects', 
+                ha='center', va='bottom')
+        
+        # Add percentage labels in the middle of each segment
+        if positive_objects[i] > 0:
+            plt.text(i, positive_objects[i]/2, 
+                    f'{(positive_objects[i] / total_objects * 100):.1f}%', 
+                    ha='center', va='center')
+        
+        if negative_objects[i] > 0:
+            plt.text(i, positive_objects[i] + negative_objects[i]/2,
+                    f'{(negative_objects[i] / total_objects * 100):.1f}%', 
+                    ha='center', va='center')
+    
+    # Add padding at the top for labels (20% padding)
+    plt.ylim(0, max([sum(x) for x in zip(positive_objects, negative_objects)]) * 1.2)
+    
+    plt.legend(loc='upper right')
+    plt.tight_layout()
+    
+    # Save the plot
+    if not os.path.exists(output):
+        os.makedirs(output)
+    output_file = os.path.join(output, f"{dataset}_{algorithm}_object_breakdown.png")
+    plt.savefig(output_file)
+    plt.close()
+
 # Dictionary mapping plot types to their corresponding functions
 PLOT_FUNCTIONS = {
     'qps': plot_recall_qps,
     'total_dimensions': plot_total_dimensions,
     'time_breakdown': plot_time_breakdown,
     'indexing_breakdown': plot_indexing_breakdown,
+    'object_breakdown': plot_object_breakdown,
     # Add more plot types here as they are implemented
     # 'memory': plot_memory_usage,
     # etc.

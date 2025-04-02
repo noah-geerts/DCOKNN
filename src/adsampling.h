@@ -26,6 +26,10 @@ namespace adsampling
     unsigned long long tot_dist_calculation = 0;
     unsigned long long tot_full_dist = 0;
 
+    // to count positive and negative objects
+    unsigned long long positive_objects = 0;
+    unsigned long long total_objects = 0;
+
     void clear()
     {
         distance_time = 0;

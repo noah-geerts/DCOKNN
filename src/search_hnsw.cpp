@@ -112,6 +112,8 @@ static void test_approx(float *massQ, size_t vecsize, size_t qsize, Hierarchical
          << " " << adsampling::tot_dimension + adsampling::tot_full_dist * vecdim
          << " " << distance_time_us_per_query
          << " " << rotation_time_per_query
+         << " " << adsampling::positive_objects
+         << " " << adsampling::total_objects - adsampling::positive_objects
          << std::endl;
     return;
 }

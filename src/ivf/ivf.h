@@ -349,6 +349,8 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, Mat
             int cluster_id = centroid_dist[i].second;
             for (int j = 0; j < len[cluster_id]; j++)
             {
+                adsampling::total_objects++;
+
                 size_t can = start[cluster_id] + j;
                 // can is the index of the start of the candidate vector in the flattened array of all data points
 #ifdef COUNT_DIST_TIME
@@ -370,6 +372,7 @@ ResultHeap IVF::search(float *query, size_t k, size_t nprobe, int algoIndex, Mat
                 if (tmp_dist > 0)
                 {
                     KNNs.emplace(tmp_dist, id[can]);
+                    adsampling::positive_objects++;
                     if (KNNs.size() > k)
                         KNNs.pop();
                 }

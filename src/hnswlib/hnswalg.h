@@ -367,6 +367,7 @@ namespace hnswlib
                         adsampling::tot_full_dist++;
                         if (top_candidates.size() < ef || lowerBound > dist)
                         {
+                            adsampling::positive_objects++;
                             candidate_set.emplace(-dist, candidate_id);
                             if (!has_deletions || !isMarkedDeleted(candidate_id))
                                 top_candidates.emplace(dist, candidate_id);
@@ -381,6 +382,7 @@ namespace hnswlib
                 }
             }
             adsampling::tot_dist_calculation += cnt_visit;
+            adsampling::total_objects += cnt_visit;
             visited_list_pool_->releaseVisitedList(vl);
             return top_candidates;
         }
@@ -493,6 +495,7 @@ namespace hnswlib
 #endif
                             if (dist >= 0)
                             {
+                                adsampling::positive_objects++;
                                 candidate_set.emplace(-dist, candidate_id);
                                 if (!has_deletions || !isMarkedDeleted(candidate_id))
                                     top_candidates.emplace(dist, candidate_id);
@@ -506,6 +509,7 @@ namespace hnswlib
                 }
             }
             adsampling::tot_dist_calculation += cnt_visit;
+            adsampling::total_objects += cnt_visit;
             visited_list_pool_->releaseVisitedList(vl);
             return top_candidates;
         }
@@ -622,6 +626,7 @@ namespace hnswlib
                             // If it's a positive object, then include it in R1, R2, S.
                             if (dist >= 0)
                             {
+                                adsampling::positive_objects++;
                                 candidate_set.emplace(-dist, candidate_id);
                                 if (!has_deletions || !isMarkedDeleted(candidate_id))
                                 {
@@ -644,6 +649,7 @@ namespace hnswlib
                                 if (top_candidates.size() < ef || lowerBoundcan > -dist)
                                 {
                                     top_candidates.emplace(-dist, candidate_id);
+                                    adsampling::positive_objects++;
                                     candidate_set.emplace(dist, candidate_id);
                                 }
                                 if (top_candidates.size() > ef)
@@ -658,6 +664,7 @@ namespace hnswlib
                 }
             }
             adsampling::tot_dist_calculation += cnt_visit;
+            adsampling::total_objects += cnt_visit;
             visited_list_pool_->releaseVisitedList(vl);
             return answers;
         }
