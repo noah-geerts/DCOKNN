@@ -108,8 +108,6 @@ void test(const Matrix<float> &Q, const Matrix<unsigned> &G, const IVF &ivf, int
                   << " " << adsampling::tot_dimension
                   << " " << distance_time_us_per_query
                   << " " << rotation_time_per_query
-                  << " " << adsampling::tot_dist_comps
-                  << " " << adsampling::tot_full_dist
                   << std::endl;
     }
 }

@@ -109,11 +109,9 @@ static void test_approx(float *massQ, size_t vecsize, size_t qsize, Hierarchical
     cout << recall * 100.0
          << " " << time_us_per_query
          << " " << appr_alg.ef_
-         << " " << adsampling::tot_dimension
+         << " " << adsampling::tot_dimension + adsampling::tot_full_dist * vecdim
          << " " << distance_time_us_per_query
          << " " << rotation_time_per_query
-         << " " << adsampling::tot_dist_comps
-         << " " << adsampling::tot_full_dist
          << std::endl;
     return;
 }
