@@ -7,3 +7,4 @@
 /src/*
 !/src/*.*
 /index_results/*.log
+/index_results/**/
