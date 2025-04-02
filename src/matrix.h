@@ -94,6 +94,10 @@ Matrix<T>::Matrix(char *data_file_path)
     in.seekg(0, std::ios::beg);
     for (size_t i = 0; i < n; i++)
     {
+        if (i % 50000 == 0)
+        {
+            std::cerr << "Reading from " << data_file_path << " - " << ((float)i / n) * 100 << "% - " << i << " / " << n << std::endl;
+        }
         in.seekg(4, std::ios::cur);
         in.read((char *)(data + i * d), d * 4);
     }

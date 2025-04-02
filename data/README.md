@@ -40,7 +40,7 @@ The tested datasets are available at https://www.cse.cuhk.edu.hk/systems/hash/gq
 5. Preprocess the dataset with PCA transformation.
 
    ```shell
-   python randomize.py
+   python pca.py
    ```
 
 6. Generate the clustering of the dataset for IVF.

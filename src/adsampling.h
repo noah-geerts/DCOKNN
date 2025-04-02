@@ -98,7 +98,7 @@ namespace adsampling
     }
 
     float dist_comp_pca(const float &dis, const void *data, const void *query, const float *err_sd, const float &C1,
-                        float m = 3)
+                        float m = 4)
     {
         float *q = (float *)query;
         float *d = (float *)data;
@@ -143,7 +143,7 @@ namespace adsampling
     }
 
     float dist_comp_adaptive_pca(const float &dis, const void *data, const void *query, const float *err_sd, const float &C1,
-                                 float m = 3)
+                                 float m = 4)
     {
         float *q = (float *)query;
         float *d = (float *)data;

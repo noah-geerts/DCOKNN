@@ -72,12 +72,12 @@ def to_fvecs(filename, data, batch_size=100000):
             end_idx = min(i + batch_size, n)
             batch = data[i:end_idx]
             
-            # Write header for this batch
-            header = np.full(end_idx - i, d, dtype=np.uint32)
-            header.tofile(fp)
-            
-            # Write batch data
-            batch.astype(np.float32).tofile(fp)
+            # For each vector in the batch, write its dimension followed by its values
+            for vector in batch:
+                # Write dimension as int32
+                fp.write(struct.pack('i', d))
+                # Write vector values as float32
+                vector.astype(np.float32).tofile(fp)
             
             print(f"Wrote batch {i//batch_size + 1}/{(n + batch_size - 1)//batch_size}")
 
@@ -96,12 +96,12 @@ def to_ivecs(filename, data, batch_size=10000):
             end_idx = min(i + batch_size, n)
             batch = data[i:end_idx]
             
-            # Write header for this batch
-            header = np.full(end_idx - i, d, dtype=np.uint32)
-            header.tofile(fp)
-            
-            # Write batch data
-            batch.astype(np.int32).tofile(fp)
+            # For each vector in the batch, write its dimension followed by its values
+            for vector in batch:
+                # Write dimension as int32
+                fp.write(struct.pack('i', d))
+                # Write vector values as int32
+                vector.astype(np.int32).tofile(fp)
             
             print(f"Wrote batch {i//batch_size + 1}/{(n + batch_size - 1)//batch_size}")
 

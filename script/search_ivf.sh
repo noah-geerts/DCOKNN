@@ -5,7 +5,7 @@ g++ -g ./src/search_ivf.cpp -O3 -o ./src/search_ivf -I ./src/
 
 K=100
 data='gist'
-dataset_N=10000
+dataset_N=1000000
 path=./data
 result_path=./results/${data}
 
@@ -53,25 +53,30 @@ for C in "${C_list[@]}"; do
             echo "IVF++"
             res="${result_path}/IVF++.log"
             trans="${path}/${data}/O.fvecs"
+            index="${path}/${data}/ivf_indexes/${data}_ivf_${C}_2.index"
         elif [ $algoIndex == "2" ]
         then 
             echo "IVF+"
             res="${result_path}/IVF+.log"
             trans="${path}/${data}/O.fvecs"
+            index="${path}/${data}/ivf_indexes/${data}_ivf_${C}_2.index"
         elif [ $algoIndex == "3" ]
         then 
             echo "IVF_PCA"
             res="${result_path}/IVF_PCA.log"
             trans="${path}/${data}/PCA.fvecs"
+            index="${path}/${data}/ivf_indexes/${data}_ivf_${C}_3.index"
         elif [ $algoIndex == "4" ]
         then 
             echo "IVF_APCA"
             res="${result_path}/IVF_APCA.log"
             trans="${path}/${data}/PCA.fvecs"
+            index="${path}/${data}/ivf_indexes/${data}_ivf_${C}_3.index"
         else
             echo "IVF"
             res="${result_path}/IVF.log"
             trans="${path}/${data}/O.fvecs"
+            index="${path}/${data}/ivf_indexes/${data}_ivf_${C}_0.index"
         fi
 
         # Output which C value is being benchmarked
@@ -79,7 +84,6 @@ for C in "${C_list[@]}"; do
         echo -e "Run ${current_run}/${total_runs} \n"
 
         # File paths for index, query vectors, groundtruth, transformation matrix, PCA mean, data vector magnitudes, and data vector dimension variances
-        index="${path}/${data}/ivf_indexes/${data}_ivf_${C}_${algoIndex}.index"
         query="${path}/${data}/${data}_query.fvecs"
         gnd="${path}/${data}/${data}_groundtruth.ivecs"
         mean="${path}/${data}/PCA_mean.fvecs"
