@@ -2,8 +2,8 @@
 cd ..
 g++ -g -o ./src/index_ivf ./src/index_ivf.cpp -I ./src/ -I ./src/Eigen/ -O3
 
-data='gist'
-dataset_N=10000
+data='word2vec'
+dataset_N=1000000
 
 # Paths to data and index (example ../data/gist)
 data_path=./data/${data}

@@ -4,8 +4,8 @@ cd ..
 g++ -g ./src/search_ivf.cpp -O3 -o ./src/search_ivf -I ./src/
 
 K=100
-data='gist'
-dataset_N=10000
+data='word2vec'
+dataset_N=1000000
 path=./data
 result_path=./results/${data}
 

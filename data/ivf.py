@@ -5,7 +5,7 @@ from fvec import read_fvecs, to_fvecs
 import time
 
 source = './'
-dataset = 'gist'
+dataset = 'word2vec'
 
 if __name__ == '__main__':
     # data paths

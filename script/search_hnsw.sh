@@ -3,7 +3,7 @@ cd ..
 
 g++ -g ./src/search_hnsw.cpp -O3 -o ./src/search_hnsw -I ./src/
 
-data='gist'
+data='word2vec' 
 path=./data
 data_path=./data/${data}
 result_path=./results/${data}

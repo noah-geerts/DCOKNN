@@ -4,7 +4,7 @@ from fvec import read_fvecs, to_fvecs
 import time
 
 source = './'
-dataset = 'gist'
+dataset = 'word2vec'
 
 def Orthogonal(D):
     G = np.random.randn(D, D).astype('float32')

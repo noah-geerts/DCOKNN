@@ -3,7 +3,7 @@ cd ..
 
 g++ -g -o ./src/index_hnsw ./src/index_hnsw.cpp -I ./src/ -O3
 
-data='gist'
+data='word2vec'
 data_path=./data/${data}
 index_path=${data_path}/hnsw_indexes
 result_path=./index_results/${data}

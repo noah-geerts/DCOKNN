@@ -5,7 +5,7 @@ from sklearn.decomposition import PCA
 import time
 
 source = './'
-dataset = 'gist'
+dataset = 'word2vec'
 
 if __name__ == "__main__":
     # path for data
